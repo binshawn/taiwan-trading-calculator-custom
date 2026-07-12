@@ -168,6 +168,34 @@
     </div>
 
     <div class="card">
+      <h2>出場試算</h2>
+      <div class="row">
+        <div class="field">
+          <label>試算方式</label>
+          <div class="seg" id="s_exit_mode">
+            <button class="on" data-v="price">依出場價格</button>
+            <button data-v="pct">依目標報酬率</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field" id="s_exit_field_price">
+          <label>出場價格（元）</label>
+          <input type="number" id="s_exit_price" value="75" step="0.01">
+        </div>
+        <div class="field" id="s_exit_field_pct" style="display:none;">
+          <label>目標報酬率（%）</label>
+          <input type="number" id="s_exit_pct" value="1" step="0.1">
+        </div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="k">出場價格</div><div class="v" id="s_exit_calcpx">—</div></div>
+        <div class="stat"><div class="k">損益</div><div class="v" id="s_exit_pnl">—</div></div>
+        <div class="stat"><div class="k">報酬率</div><div class="v" id="s_exit_ret">—</div></div>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>賣出價位試算表</h2>
       <table>
         <thead><tr><th>賣出價</th><th>距買價</th><th>賣出淨值</th><th>損益（元）</th><th>報酬率</th><th>備註</th></tr></thead>
@@ -381,6 +409,11 @@ document.querySelectorAll('.seg').forEach(seg=>{
       document.getElementById('f_exit_field_pts').style.display = isPct ? 'none' : '';
       document.getElementById('f_exit_field_pct').style.display = isPct ? '' : 'none';
     }
+    if(seg.id === 's_exit_mode'){
+      const isPct = btn.dataset.v === 'pct';
+      document.getElementById('s_exit_field_price').style.display = isPct ? 'none' : '';
+      document.getElementById('s_exit_field_pct').style.display = isPct ? '' : 'none';
+    }
     recalcAll();
   });
 });
@@ -442,6 +475,26 @@ function calcStock(){
   document.getElementById('s_bepx').textContent = fmt(bePrice) + ' 元';
   document.getElementById('s_ticks').textContent = n + ' 檔';
   document.getElementById('s_tick').textContent = tickAt(price).toFixed(2) + ' 元';
+
+  // 出場試算：依出場價格，或依目標報酬率反推出場價格
+  const exitMode = document.querySelector('#s_exit_mode .on').dataset.v;
+  let exitPx;
+  if(exitMode==='pct'){
+    const targetPct = (parseFloat(document.getElementById('s_exit_pct').value)||0)/100;
+    exitPx = price*(targetPct + 1 + FEE_RATE)/(1 - FEE_RATE - TAX_RATE);
+  } else {
+    exitPx = parseFloat(document.getElementById('s_exit_price').value)||0;
+  }
+  const exitBuyFee = price*1000*lots*FEE_RATE;
+  const exitSellFee = exitPx*1000*lots*FEE_RATE;
+  const exitTax = exitPx*1000*lots*TAX_RATE;
+  const exitPnl = (exitPx-price)*1000*lots - exitBuyFee - exitSellFee - exitTax;
+  const exitRetPct = price>0 ? exitPnl/(price*1000*lots) : 0;
+  document.getElementById('s_exit_calcpx').textContent = fmt(exitPx) + ' 元';
+  document.getElementById('s_exit_pnl').textContent = (exitPnl>=0?'+':'') + fmt0(exitPnl) + ' 元';
+  document.getElementById('s_exit_pnl').className = 'v ' + (exitPnl>=0?'pos':'neg');
+  document.getElementById('s_exit_ret').textContent = pctFmt(exitRetPct);
+  document.getElementById('s_exit_ret').className = 'v ' + (exitRetPct>=0?'pos':'neg');
 
   // tape gauge: map -3 ticks .. bePrice+3 ticks range, 0 = buy price left-ish
   const rangeLow = price - 4*tick;
