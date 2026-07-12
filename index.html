@@ -81,7 +81,9 @@
   }
   .seg button.on{background:var(--panel); color:var(--text); border-color:var(--amber); box-shadow:0 0 0 1px var(--amber) inset;}
   #o_strategy{flex-wrap:wrap;}
-  #o_strategy button{flex:1 1 46%;}
+  #o_strategy button{flex:1 1 46%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;}
+  #o_strategy .strat-en{font-size:10px; font-weight:500; color:var(--text-faint); font-family:var(--mono);}
+  #o_strategy button.on .strat-en{color:var(--amber);}
 
   /* signature element: breakeven tape gauge */
   .tape{position:relative; height:64px; margin:38px 0 26px; border-radius:8px; overflow:visible;}
@@ -307,10 +309,10 @@
     <div class="card">
       <h2>策略</h2>
       <div class="seg" id="o_strategy">
-        <button class="on" data-v="bullcall">買權多頭價差（Bull Call）</button>
-        <button data-v="bullput">賣權多頭價差（Bull Put）</button>
-        <button data-v="bearcall">買權空頭價差（Bear Call）</button>
-        <button data-v="bearput">賣權空頭價差（Bear Put）</button>
+        <button class="on" data-v="bullcall">買權多頭價差<span class="strat-en">Bull Call</span></button>
+        <button data-v="bullput">賣權多頭價差<span class="strat-en">Bull Put</span></button>
+        <button data-v="bearcall">買權空頭價差<span class="strat-en">Bear Call</span></button>
+        <button data-v="bearput">賣權空頭價差<span class="strat-en">Bear Put</span></button>
       </div>
     </div>
 
