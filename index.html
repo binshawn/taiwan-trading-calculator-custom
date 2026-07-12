@@ -110,6 +110,7 @@
   td{text-align:right; padding:8px 6px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
   tr.buyrow{background:rgba(232,168,60,0.06);}
   tr.evrow{background:rgba(31,174,110,0.10);}
+  tr.exitrow{background:rgba(181,121,26,0.10); border-top:2px solid var(--amber);}
   .pos{color:var(--gain); font-weight:700;}
   .neg{color:var(--loss); font-weight:700;}
   .note-cell{font-size:11px; color:var(--amber); font-weight:700;}
@@ -691,10 +692,12 @@ function calcStock(){
     ucur = ucur + tickUp(ucur);
     rows.push({price: roundTo(ucur,2), tag:''});
   }
+  // 使用者自己輸入的出場價，不一定卡在整數檔位上，獨立加一列在最下面
+  if(exitPx > 0){ rows.push({price: roundTo(exitPx,2), tag:'exit'}); }
   // 標記上下五檔裡「第一個真正淨利 > 0」的檔位，不再另外插入不一定卡得到的理論損平價
   const tagBuyFee = price*1000*lots*FEE_RATE;
   for(const r of rows){
-    if(r.tag==='buy') continue;
+    if(r.tag==='buy' || r.tag==='exit') continue;
     const sellFee = r.price*1000*lots*FEE_RATE;
     const tax = r.price*1000*lots*TAX_RATE;
     const pnl = (r.price-price)*1000*lots - tagBuyFee - sellFee - tax;
@@ -722,7 +725,8 @@ function calcStock(){
     let note = '';
     if(r.tag==='buy') note = '← 買進價';
     if(r.tag==='profit') note = '🎯 獲利點';
-    const rowClass = r.tag==='buy' ? 'buyrow' : (r.tag==='profit' ? 'evrow':'');
+    if(r.tag==='exit') note = '⭐ 你的出場價';
+    const rowClass = r.tag==='buy' ? 'buyrow' : (r.tag==='profit' ? 'evrow' : (r.tag==='exit' ? 'exitrow' : ''));
     const tr = tbody.children[i];
     tr.className = rowClass;
     const c = tr.children;
