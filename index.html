@@ -75,6 +75,9 @@
     padding:9px 10px; border-radius:7px; font-family:var(--mono); font-size:16px; font-weight:600;
   }
   .field input:focus, .field select:focus{outline:none; border-color:var(--amber);}
+  .hist-chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+  .hist-chip{font-family:var(--mono); font-size:12px; padding:3px 9px; border-radius:12px; background:var(--panel-2); border:1px solid var(--line); color:var(--text-dim); cursor:pointer;}
+  .hist-chip:hover{border-color:var(--amber); color:var(--text);}
   .seg{display:flex; gap:6px;}
   .seg button{
     flex:1; padding:9px 6px; border-radius:7px; border:1px solid var(--line); background:var(--panel-2);
@@ -135,6 +138,7 @@
     .field label{font-size:16px;}
     .leg-row label{min-height:46px;}
     .field input, .field select{font-size:20px;}
+    .hist-chip{font-size:15px; padding:5px 12px;}
     .seg button{font-size:16px;}
     table{font-size:16px;}
     th{font-size:14px;}
@@ -1164,6 +1168,37 @@ document.querySelectorAll('input').forEach(el=>{
   el.addEventListener('input', ()=>{ persistInput(el); debouncedRecalc(); });
 });
 recalcAll();
+
+// ---------- 每個輸入框記住最近 5 筆歷史值，點一下快速帶入 ----------
+const HIST_KEY = 'inputHistory';
+function loadHist(){ try{ return JSON.parse(localStorage.getItem(HIST_KEY) || '{}'); }catch(e){ return {}; } }
+function saveHist(h){ localStorage.setItem(HIST_KEY, JSON.stringify(h)); }
+function renderHistChips(input, box){
+  const hist = loadHist()[input.id] || [];
+  box.innerHTML = hist.map(v => `<button type="button" class="hist-chip">${v}</button>`).join('');
+  box.querySelectorAll('.hist-chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      input.value = btn.textContent;
+      input.dispatchEvent(new Event('input'));
+    });
+  });
+}
+document.querySelectorAll('input[type="number"][id]').forEach(input=>{
+  const box = document.createElement('div');
+  box.className = 'hist-chips';
+  input.insertAdjacentElement('afterend', box);
+  renderHistChips(input, box);
+  input.addEventListener('change', ()=>{
+    const v = input.value.trim();
+    if(v==='') return;
+    const h = loadHist();
+    const arr = (h[input.id] || []).filter(x=>x!==v);
+    arr.unshift(v);
+    h[input.id] = arr.slice(0,5);
+    saveHist(h);
+    renderHistChips(input, box);
+  });
+});
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
