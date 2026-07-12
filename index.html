@@ -112,6 +112,7 @@
   .note-cell{font-size:11px; color:var(--amber); font-weight:700;}
 
   .stat-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px; margin-top:6px;}
+  .stat.wide{grid-column:span 2;}
   .stat{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:12px;}
   .stat .k{font-size:11px; color:var(--text-faint); margin-bottom:4px; min-height:28px;}
   .stat .v{font-family:var(--mono); font-size:17px; font-weight:700; white-space:nowrap;}
@@ -460,7 +461,7 @@
       <div class="tape-labels"><span>← 最大虧損（綠）</span><span>最大獲利（紅）→</span></div>
       <div class="stat-grid">
         <div class="stat"><div class="k">淨權利金</div><div class="v" id="o_netdebit">—</div></div>
-        <div class="stat"><div class="k">損益兩平點</div><div class="v" id="o_bep">—</div></div>
+        <div class="stat" id="o_bep_stat"><div class="k">損益兩平點</div><div class="v" id="o_bep">—</div></div>
         <div class="stat"><div class="k">最大獲利</div><div class="v" id="o_maxprofit">—</div></div>
         <div class="stat"><div class="k">最大虧損</div><div class="v" id="o_maxloss">—</div></div>
       </div>
@@ -893,6 +894,7 @@ function calcOptSpread(){
   document.getElementById('o_netdebit').textContent = (netDebitAfterCost>=0 ? '淨支出 ' : '淨收入 ') + fmt0(Math.abs(netDebitAfterCost)) + ' 元';
   document.getElementById('o_netdebit').className = 'v ' + (netDebitAfterCost>=0 ? 'neg' : 'pos');
   document.getElementById('o_bep').textContent = isCombo ? `${fmt(bepLower)} ／ ${fmt(bepUpper)} 點` : fmt(bep)+' 點';
+  document.getElementById('o_bep_stat').classList.toggle('wide', isCombo);
   document.getElementById('o_maxprofit').textContent = maxProfit===Infinity ? '無上限' : fmt0(Math.max(maxProfit,0))+' 元';
   document.getElementById('o_maxprofit').className = 'v pos';
   document.getElementById('o_maxloss').textContent = maxLoss===Infinity ? '無上限' : fmt0(Math.max(maxLoss,0))+' 元';
@@ -984,6 +986,7 @@ function calcOptSpread(){
 }
 
 function calcOptSingle(){
+  document.getElementById('o_bep_stat').classList.remove('wide');
   const strategy = document.querySelector('#o_strategy_single .on').dataset.v; // longcall/longput/shortcall/shortput
   const closeMode = document.querySelector('#o_single_close .on').dataset.v; // hold_otm/hold_itm/close
   const strike = parseFloat(document.getElementById('o_single_strike').value)||0;
