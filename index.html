@@ -498,14 +498,20 @@
 
     <div class="card" id="o_margin_single_card" style="display:none;">
       <h2>單腳保證金說明 — 台灣期交所<span class="badge" id="o_margin_updated">讀取中…</span></h2>
-      <div class="table-scroll"><table>
-        <thead><tr><th>策略</th><th>是否需要保證金</th></tr></thead>
-        <tbody>
-          <tr><td>買進買權／買進賣權（Long Call／Long Put）</td><td>不需要，最大風險就是已付出的權利金</td></tr>
-          <tr><td>賣出買權／賣出賣權（Short Call／Short Put，裸賣）</td><td>需要，且金額每日變動</td></tr>
-        </tbody>
-      </table></div>
-      <div class="foot-note">裸賣保證金採「權利金市值 ＋ MAX(A值－價外值, B值)」公式；深度價外（500點以上）另有加成。A值、B值是期交所每日公告的基準參數（非公式算出來的），會隨行情調整：</div>
+      <div id="o_margin_single_long_note" class="callout" style="display:none;">買進（Long Call／Long Put）<b>不需要保證金</b>，最大風險就是已付出的權利金（已經全額付清）。</div>
+      <div id="o_margin_single_short_note" style="display:none;">
+        <div class="row">
+          <div class="field">
+            <label>標的現價（大盤／期貨參考價）</label>
+            <input type="number" id="o_single_spot" step="1">
+          </div>
+        </div>
+        <div class="callout">裸賣保證金公式：<b>權利金市值 ＋ MAX(A值－價外值, B值)</b>，深度價外（500點以上）依規定加成 A/B值 20%～50%。這是真的用你填的履約價、權利金、標的現價算出來的金額。</div>
+        <div class="stat-grid">
+          <div class="stat"><div class="k">價外值</div><div class="v" id="o_single_otm">—</div></div>
+          <div class="stat"><div class="k">原始保證金</div><div class="v" id="o_single_margin">—</div></div>
+        </div>
+      </div>
       <div class="table-scroll"><table>
         <thead><tr><th>臺指選擇權風險保證金</th><th>結算</th><th>維持</th><th>原始</th></tr></thead>
         <tbody>
@@ -513,7 +519,7 @@
           <tr><td>B值</td><td id="o_margin_b_settle">—</td><td id="o_margin_b_maintain">—</td><td id="o_margin_b_initial">—</td></tr>
         </tbody>
       </table></div>
-      <div class="foot-note">上述 A值/B值資料每個交易日自動從台灣期交所官網（taifex.com.tw）抓取更新；「價外值」需要標的物即時價格才能算，本工具不做即時試算，請以下單當下期貨商系統試算為準。</div>
+      <div class="foot-note">上述 A值/B值資料每個交易日自動從台灣期交所官網（taifex.com.tw）抓取更新。實際核准金額仍以下單當下期貨商系統為準。</div>
     </div>
   </div>
 
@@ -1093,6 +1099,26 @@ function calcOptSingle(){
     shapeText = `結算價高於 ${fmt(bep)} 點時鎖定最大獲利（收取的淨權利金）${fmt0(maxProfit)} 元；低於 ${fmt(bep)} 點後虧損隨結算價下跌而擴大，結算價為 0 時達到最高虧損 ${fmt0(maxLoss)} 元——這是裸賣部位，風險較高。`;
   }
   document.getElementById('o_shape').innerHTML = `<b>${stratName}</b>：損益兩平點在 <b>${fmt(bep)}</b> 點。` + shapeText;
+
+  // ---------- 保證金區塊 ----------
+  document.getElementById('o_margin_single_long_note').style.display = isLong ? '' : 'none';
+  document.getElementById('o_margin_single_short_note').style.display = isLong ? 'none' : '';
+
+  if(!isLong){
+    if(!MARGIN_DATA){
+      document.getElementById('o_single_margin').textContent = '資料載入中…';
+    } else {
+      const spot = parseFloat(document.getElementById('o_single_spot').value)||0;
+      const otmPts = isCall ? Math.max(strike-spot, 0) : Math.max(spot-strike, 0);
+      const otmAmt = otmPts*PT*lots;
+      const aInit = MARGIN_DATA.txo_a.initial*lots;
+      const bInit = MARGIN_DATA.txo_b.initial*lots;
+      const sur = otmSurcharge(otmPts);
+      const marginAmt = premAmt + Math.max(aInit*sur - otmAmt, bInit*sur);
+      document.getElementById('o_single_otm').textContent = fmt(otmPts)+' 點';
+      document.getElementById('o_single_margin').textContent = fmt0(marginAmt)+' 元';
+    }
+  }
 }
 
 function recalcAll(){
