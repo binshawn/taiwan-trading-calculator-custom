@@ -394,14 +394,22 @@
 
 <script>
 // ---------- tab switching ----------
+function activateTab(name){
+  const tabEl = document.querySelector(`.tab[data-tab="${name}"]`);
+  if(!tabEl) return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+}
 document.querySelectorAll('.tab').forEach(t=>{
   t.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+    activateTab(t.dataset.tab);
+    localStorage.setItem('activeTab', t.dataset.tab);
   });
 });
+const savedTab = localStorage.getItem('activeTab');
+if(savedTab) activateTab(savedTab);
 document.querySelectorAll('.seg').forEach(seg=>{
   seg.addEventListener('click', e=>{
     const btn = e.target.closest('button');
@@ -726,7 +734,12 @@ function recalcAll(){
   calcOpt();
 }
 
-document.querySelectorAll('input').forEach(el=>el.addEventListener('input', recalcAll));
+let recalcTimer = null;
+function debouncedRecalc(){
+  clearTimeout(recalcTimer);
+  recalcTimer = setTimeout(recalcAll, 250);
+}
+document.querySelectorAll('input').forEach(el=>el.addEventListener('input', debouncedRecalc));
 recalcAll();
 
 if('serviceWorker' in navigator){
