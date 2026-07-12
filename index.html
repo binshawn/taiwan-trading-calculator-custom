@@ -569,9 +569,15 @@ function calcStock(){
     if(pnl > 0){ r.tag = 'profit'; break; }
   }
 
+  // 更新既有的 <tr>／<td> 文字內容，不重建整個表格 DOM，避免手機瀏覽器因大範圍 DOM 重建而重新捲動版面
   const buyCostPrincipal = price*1000*lots;
-  let html = '';
-  rows.forEach(r=>{
+  const tbody = document.getElementById('s_table');
+  if(tbody.children.length !== rows.length){
+    let skeleton = '';
+    for(let i=0;i<rows.length;i++){ skeleton += '<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>'; }
+    tbody.innerHTML = skeleton;
+  }
+  rows.forEach((r,i)=>{
     const sellPx = r.price;
     const buyFee = price*1000*lots*FEE_RATE;
     const sellFee = sellPx*1000*lots*FEE_RATE;
@@ -585,16 +591,19 @@ function calcStock(){
     if(r.tag==='buy') note = '← 買進價';
     if(r.tag==='profit') note = '🎯 獲利點';
     const rowClass = r.tag==='buy' ? 'buyrow' : (r.tag==='profit' ? 'evrow':'');
-    html += `<tr class="${rowClass}">
-      <td>${fmt(sellPx)}</td>
-      <td>${dist>=0?'+':''}${fmt(dist)}</td>
-      <td>${fmt0(netProceeds)}</td>
-      <td class="${pnlClass}">${pnl>=0?'+':''}${fmt0(pnl)}</td>
-      <td class="${pnlClass}">${pctFmt(retPct)}</td>
-      <td class="note-cell">${note}</td>
-    </tr>`;
+    const tr = tbody.children[i];
+    tr.className = rowClass;
+    const c = tr.children;
+    c[0].textContent = fmt(sellPx);
+    c[1].textContent = (dist>=0?'+':'')+fmt(dist);
+    c[2].textContent = fmt0(netProceeds);
+    c[3].textContent = (pnl>=0?'+':'')+fmt0(pnl);
+    c[3].className = pnlClass;
+    c[4].textContent = pctFmt(retPct);
+    c[4].className = pnlClass;
+    c[5].textContent = note;
+    c[5].className = 'note-cell';
   });
-  document.getElementById('s_table').innerHTML = html;
 }
 
 // ---------- 台指期貨 ----------
