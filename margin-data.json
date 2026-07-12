@@ -1,0 +1,28 @@
+{
+  "updated": "2026/07/06",
+  "mtx": {
+    "settle": 117750,
+    "maintain": 122000,
+    "initial": 159000
+  },
+  "tmf": {
+    "settle": 23550,
+    "maintain": 24400,
+    "initial": 31800
+  },
+  "txo_a": {
+    "settle": 125000,
+    "maintain": 130000,
+    "initial": 169000
+  },
+  "txo_b": {
+    "settle": 63000,
+    "maintain": 65000,
+    "initial": 85000
+  },
+  "txo_c": {
+    "settle": 12600,
+    "maintain": 13000,
+    "initial": 17000
+  }
+}

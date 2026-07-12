@@ -321,15 +321,15 @@
     </div>
 
     <div class="card">
-      <h2>保證金（台灣期交所 官網公告）<span class="badge">2026/07/06 更新</span></h2>
+      <h2>保證金（台灣期交所 官網公告）<span class="badge" id="f_margin_updated">讀取中…</span></h2>
       <div class="table-scroll"><table>
         <thead><tr><th>商品</th><th>結算保證金</th><th>維持保證金</th><th>原始保證金</th></tr></thead>
         <tbody>
-          <tr><td>小型臺指期貨（MTX）</td><td>117,750</td><td>122,000</td><td>159,000</td></tr>
-          <tr><td>微型臺指期貨（TMF）</td><td>23,550</td><td>24,400</td><td>31,800</td></tr>
+          <tr><td>小型臺指期貨（MTX）</td><td id="f_margin_mtx_settle">—</td><td id="f_margin_mtx_maintain">—</td><td id="f_margin_mtx_initial">—</td></tr>
+          <tr><td>微型臺指期貨（TMF）</td><td id="f_margin_tmf_settle">—</td><td id="f_margin_tmf_maintain">—</td><td id="f_margin_tmf_initial">—</td></tr>
         </tbody>
       </table></div>
-      <div class="foot-note">保證金會隨大盤點位與波動度頻繁調整，交易前務必至台灣期交所官網（taifex.com.tw）核對當下最新公告，此處數字僅供參考，不代表交易當下之即時金額。</div>
+      <div class="foot-note">保證金資料每個交易日自動從台灣期交所官網（taifex.com.tw）抓取更新，交易前仍務必自行核對當下最新公告，此處數字僅供參考，不代表交易當下之即時金額。</div>
     </div>
   </div>
 
@@ -462,7 +462,7 @@
     </div>
 
     <div class="card" id="o_margin_single_card" style="display:none;">
-      <h2>單腳保證金說明 — 台灣期交所</h2>
+      <h2>單腳保證金說明 — 台灣期交所<span class="badge" id="o_margin_updated">讀取中…</span></h2>
       <div class="table-scroll"><table>
         <thead><tr><th>策略</th><th>是否需要保證金</th></tr></thead>
         <tbody>
@@ -470,7 +470,15 @@
           <tr><td>賣出買權／賣出賣權（Short Call／Short Put，裸賣）</td><td>需要，且金額每日變動</td></tr>
         </tbody>
       </table></div>
-      <div class="foot-note">裸賣保證金採 MAX(A值, B值) 公式：A值＝權利金×標的乘數＋MAX(原始保證金－價外損失, 最低結算保證金)；B值＝權利金×標的乘數＋原始保證金×1/2。金額會隨標的物收盤價、履約價、權利金每日浮動，並非固定表格數字，本工具不做即時試算，請以下單當下期貨商系統試算或台灣期交所官網（taifex.com.tw）公告為準。</div>
+      <div class="foot-note">裸賣保證金採「權利金市值 ＋ MAX(A值－價外值, B值)」公式；深度價外（500點以上）另有加成。A值、B值是期交所每日公告的基準參數（非公式算出來的），會隨行情調整：</div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>臺指選擇權風險保證金</th><th>結算</th><th>維持</th><th>原始</th></tr></thead>
+        <tbody>
+          <tr><td>A值</td><td id="o_margin_a_settle">—</td><td id="o_margin_a_maintain">—</td><td id="o_margin_a_initial">—</td></tr>
+          <tr><td>B值</td><td id="o_margin_b_settle">—</td><td id="o_margin_b_maintain">—</td><td id="o_margin_b_initial">—</td></tr>
+        </tbody>
+      </table></div>
+      <div class="foot-note">上述 A值/B值資料每個交易日自動從台灣期交所官網（taifex.com.tw）抓取更新；「價外值」需要標的物即時價格才能算，本工具不做即時試算，請以下單當下期貨商系統試算為準。</div>
     </div>
   </div>
 
@@ -977,6 +985,24 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   });
 }
+
+// ---------- 每日自動更新的保證金資料 ----------
+fetch('./margin-data.json?_=' + Date.now())
+  .then(r => r.json())
+  .then(d => {
+    const setCell = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = fmt0(v); };
+    if(d.mtx){ setCell('f_margin_mtx_settle', d.mtx.settle); setCell('f_margin_mtx_maintain', d.mtx.maintain); setCell('f_margin_mtx_initial', d.mtx.initial); }
+    if(d.tmf){ setCell('f_margin_tmf_settle', d.tmf.settle); setCell('f_margin_tmf_maintain', d.tmf.maintain); setCell('f_margin_tmf_initial', d.tmf.initial); }
+    if(d.txo_a){ setCell('o_margin_a_settle', d.txo_a.settle); setCell('o_margin_a_maintain', d.txo_a.maintain); setCell('o_margin_a_initial', d.txo_a.initial); }
+    if(d.txo_b){ setCell('o_margin_b_settle', d.txo_b.settle); setCell('o_margin_b_maintain', d.txo_b.maintain); setCell('o_margin_b_initial', d.txo_b.initial); }
+    const updatedText = d.updated ? d.updated+' 更新' : '更新日期未知';
+    const fBadge = document.getElementById('f_margin_updated'); if(fBadge) fBadge.textContent = updatedText;
+    const oBadge = document.getElementById('o_margin_updated'); if(oBadge) oBadge.textContent = updatedText;
+  })
+  .catch(() => {
+    const fBadge = document.getElementById('f_margin_updated'); if(fBadge) fBadge.textContent = '資料載入失敗';
+    const oBadge = document.getElementById('o_margin_updated'); if(oBadge) oBadge.textContent = '資料載入失敗';
+  });
 </script>
 </body>
 </html>
