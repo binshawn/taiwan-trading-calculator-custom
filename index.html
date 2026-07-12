@@ -94,10 +94,11 @@
   .tape-buy::after{content:'買進 ' attr(data-label); position:absolute; top:18px; left:50%; transform:translateX(-50%); font-family:var(--mono); font-size:10px; color:var(--text-dim); white-space:nowrap;}
   .tape-labels{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px; color:var(--text-faint); margin-top:2px;}
 
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
   table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;}
-  th{text-align:right; padding:8px 6px; color:var(--text-faint); font-weight:600; border-bottom:1px solid var(--line); font-size:11px; text-transform:uppercase; letter-spacing:0.3px;}
+  th{text-align:right; padding:8px 6px; color:var(--text-faint); font-weight:600; border-bottom:1px solid var(--line); font-size:11px; text-transform:uppercase; letter-spacing:0.3px; white-space:nowrap;}
   th:first-child, td:first-child{text-align:left;}
-  td{text-align:right; padding:8px 6px; border-bottom:1px solid var(--line-soft);}
+  td{text-align:right; padding:8px 6px; border-bottom:1px solid var(--line-soft); white-space:nowrap;}
   tr.buyrow{background:rgba(232,168,60,0.06);}
   tr.evrow{background:rgba(31,174,110,0.10);}
   .pos{color:var(--gain); font-weight:700;}
@@ -197,10 +198,10 @@
 
     <div class="card">
       <h2>賣出價位試算表</h2>
-      <table>
+      <div class="table-scroll"><table>
         <thead><tr><th>賣出價</th><th>距買價</th><th>賣出淨值</th><th>損益（元）</th><th>報酬率</th><th>備註</th></tr></thead>
         <tbody id="s_table"></tbody>
-      </table>
+      </table></div>
       <div class="foot-note">報酬率＝損益 ÷（買進股價×1000×張數）。賣出淨值＝賣出金額 － 賣出手續費 － 當沖證交稅。若券商設有最低手續費下限，實際損平點會略高，請自行核對。</div>
     </div>
   </div>
@@ -289,13 +290,13 @@
 
     <div class="card">
       <h2>保證金（台灣期交所 官網公告）<span class="badge">2026/07/06 更新</span></h2>
-      <table>
+      <div class="table-scroll"><table>
         <thead><tr><th>商品</th><th>結算保證金</th><th>維持保證金</th><th>原始保證金</th></tr></thead>
         <tbody>
           <tr><td>小型臺指期貨（MTX）</td><td>117,750</td><td>122,000</td><td>159,000</td></tr>
           <tr><td>微型臺指期貨（TMF）</td><td>23,550</td><td>24,400</td><td>31,800</td></tr>
         </tbody>
-      </table>
+      </table></div>
       <div class="foot-note">保證金會隨大盤點位與波動度頻繁調整，交易前務必至台灣期交所官網（taifex.com.tw）核對當下最新公告，此處數字僅供參考，不代表交易當下之即時金額。</div>
     </div>
   </div>
@@ -375,10 +376,10 @@
 
     <div class="card">
       <h2>混合部位風險保證金（C值）— 台灣期交所<span class="badge">2026/07/06 更新</span></h2>
-      <table>
+      <div class="table-scroll"><table>
         <thead><tr><th>項目</th><th>結算保證金</th><th>維持保證金</th><th>原始保證金</th></tr></thead>
         <tbody><tr><td>臺指選擇權 C 值</td><td>12,600</td><td>13,000</td><td>17,000</td></tr></tbody>
-      </table>
+      </table></div>
       <div class="foot-note">買一賣一同方向的價差組合通常適用 C 值計收（遠低於單邊裸露的 A/B 值），但實際核准與比例仍以下單當下期貨商系統及台灣期交所公告為準。</div>
     </div>
   </div>
