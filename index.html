@@ -107,7 +107,7 @@
 
   .stat-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px; margin-top:6px;}
   .stat{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:12px;}
-  .stat .k{font-size:11px; color:var(--text-faint); margin-bottom:4px;}
+  .stat .k{font-size:11px; color:var(--text-faint); margin-bottom:4px; min-height:28px;}
   .stat .v{font-family:var(--mono); font-size:17px; font-weight:700;}
 
   .callout{font-size:12px; color:var(--text-dim); line-height:1.6; padding:12px; background:var(--panel-2); border-left:2px solid var(--amber); border-radius:0 6px 6px 0; margin-top:12px;}
@@ -197,7 +197,7 @@
     </div>
 
     <div class="card">
-      <h2>賣出價位試算表</h2>
+      <h2>賣出價位上下五檔試算表</h2>
       <div class="table-scroll"><table>
         <thead><tr><th>賣出價</th><th>距買價</th><th>賣出淨值</th><th>損益（元）</th><th>報酬率</th><th>備註</th></tr></thead>
         <tbody id="s_table"></tbody>
@@ -365,7 +365,7 @@
       </div>
       <div class="tape-labels"><span>← 最大虧損（綠）</span><span>最大獲利（紅）→</span></div>
       <div class="stat-grid">
-        <div class="stat"><div class="k">淨權利金（含開倉成本）</div><div class="v" id="o_netdebit">—</div></div>
+        <div class="stat"><div class="k">淨權利金</div><div class="v" id="o_netdebit">—</div></div>
         <div class="stat"><div class="k">損益兩平點</div><div class="v" id="o_bep">—</div></div>
         <div class="stat"><div class="k">最大獲利</div><div class="v" id="o_maxprofit">—</div></div>
         <div class="stat"><div class="k">最大虧損</div><div class="v" id="o_maxloss">—</div></div>
