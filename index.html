@@ -85,6 +85,8 @@
   #o_strategy button{flex:1 1 46%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;}
   #o_strategy .strat-en{font-size:10px; font-weight:500; color:var(--text-faint); font-family:var(--mono);}
   #o_strategy button.on .strat-en{color:var(--amber);}
+  #o_single_close{flex-wrap:wrap;}
+  #o_single_close button{flex:1 1 30%;}
 
   /* signature element: breakeven tape gauge */
   .tape{position:relative; height:64px; margin:38px 0 26px; border-radius:8px; overflow:visible;}
@@ -422,11 +424,14 @@
           <label>口數（口）</label>
           <input type="number" id="o_single_lots" step="1" min="1">
         </div>
+      </div>
+      <div class="row">
         <div class="field">
-          <label>是否會提前平倉？</label>
+          <label>到期／平倉方式</label>
           <div class="seg" id="o_single_close">
-            <button class="on" data-v="hold">留倉到結算</button>
-            <button data-v="close">會提前平倉</button>
+            <button class="on" data-v="hold_otm">留倉到結算（價外）</button>
+            <button data-v="hold_itm">留倉到結算（價內履約）</button>
+            <button data-v="close">提前平倉</button>
           </div>
         </div>
       </div>
@@ -772,6 +777,8 @@ function calcOptSpread(){
     const closeTax = (buyPremAmt + sellPremAmt)*0.001;
     totalCost += closeFee + closeTax;
     costNote += ` 因提前平倉，另計平倉手續費 ${fmt0(closeFee)} 元＋平倉期交稅（以平倉當下權利金金額×0.1%計，此處先以開倉權利金金額概估 ${fmt0(closeTax)} 元，實際請以平倉當下報價覆核）。`;
+  } else {
+    costNote += ` 上述試算假設留倉到結算時兩腳都價外歸零、不收手續費不課稅。若結算時有一腳（或兩腳）價內履約，該腳會另計一筆結算手續費（比照原下單管道費率）＋結算期交稅（結算價×契約乘數×0.00002），因為價差策略要看結算價落在哪個履約價區間，這裡不強行試算，請自行依結算價概估。`;
   }
 
   const netDebitAfterCost = rawNetDebit + totalCost;
@@ -837,7 +844,7 @@ function calcOptSpread(){
 
 function calcOptSingle(){
   const strategy = document.querySelector('#o_strategy_single .on').dataset.v; // longcall/longput/shortcall/shortput
-  const willClose = document.querySelector('#o_single_close .on').dataset.v === 'close';
+  const closeMode = document.querySelector('#o_single_close .on').dataset.v; // hold_otm/hold_itm/close
   const strike = parseFloat(document.getElementById('o_single_strike').value)||0;
   const prem = parseFloat(document.getElementById('o_single_prem').value)||0;
   const lots = parseFloat(document.getElementById('o_single_lots').value)||1;
@@ -855,11 +862,18 @@ function calcOptSingle(){
   let totalCost = openFee + openTax;
   let costNote = `開倉成本：手續費 1 腳 × ${fmt0(optFee)} 元 × ${lots} 口 = ${fmt0(openFee)} 元；期交稅（權利金×0.1%）= ${fmt0(openTax)} 元。`;
 
-  if(willClose){
+  if(closeMode === 'close'){
     const closeFee = optFee*1*lots;
     const closeTax = premAmt*0.001;
     totalCost += closeFee + closeTax;
     costNote += ` 因提前平倉，另計平倉手續費 ${fmt0(closeFee)} 元＋平倉期交稅（此處先以開倉權利金金額概估 ${fmt0(closeTax)} 元，實際請以平倉當下報價覆核）。`;
+  } else if(closeMode === 'hold_itm'){
+    const settleFee = optFee*1*lots; // 參與結算手續費比照原下單管道費率，跟開倉同一個費率，不是免費也不是雙倍
+    const settleTax = strike*PT*lots*0.00002; // 期交稅＝結算價×契約乘數×0.00002，此處以履約價概估結算價
+    totalCost += settleFee + settleTax;
+    costNote += ` 因留倉到結算且為價內履約（參與結算），另計結算手續費 ${fmt0(settleFee)} 元（比照原下單管道費率，跟開倉一樣）＋結算期交稅（結算價×契約乘數×0.00002，此處以履約價概估 ${fmt0(settleTax)} 元，實際請以台灣期交所公告之結算價計算）。`;
+  } else {
+    costNote += ` 留倉到結算且為價外（歸零）：不參與結算，不收手續費、免期交稅。`;
   }
 
   const notional = strike*PT*lots;
