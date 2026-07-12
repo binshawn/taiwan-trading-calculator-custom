@@ -358,6 +358,10 @@
         <button data-v="bullput">賣權多頭價差<span class="strat-en">Bull Put</span></button>
         <button data-v="bearcall">買權空頭價差<span class="strat-en">Bear Call</span></button>
         <button data-v="bearput">賣權空頭價差<span class="strat-en">Bear Put</span></button>
+        <button data-v="longstraddle">買進跨式<span class="strat-en">Long Straddle</span></button>
+        <button data-v="shortstraddle">賣出跨式<span class="strat-en">Short Straddle</span></button>
+        <button data-v="longstrangle">買進勒式<span class="strat-en">Long Strangle</span></button>
+        <button data-v="shortstrangle">賣出勒式<span class="strat-en">Short Strangle</span></button>
       </div>
     </div>
 
@@ -379,7 +383,7 @@
           <input type="number" id="o_buy_strike" step="50">
         </div>
         <div class="field">
-          <label>買進權利金（點）</label>
+          <label id="o_buy_prem_label">買進權利金（點）</label>
           <input type="number" id="o_buy_prem" step="1">
         </div>
       </div>
@@ -389,7 +393,7 @@
           <input type="number" id="o_sell_strike" step="50">
         </div>
         <div class="field">
-          <label>賣出權利金（點）</label>
+          <label id="o_sell_prem_label">賣出權利金（點）</label>
           <input type="number" id="o_sell_prem" step="1">
         </div>
       </div>
@@ -412,7 +416,7 @@
           <input type="number" id="o_fee" step="1" min="0">
         </div>
       </div>
-      <div class="foot-note">「買進」＝支付權利金的那一腳；「賣出」＝收取權利金的那一腳。Bull Call／Bear Put 是淨支出（debit）價差；Bull Put／Bear Call 是淨收入（credit）價差，通常賣出腳的權利金會比買進腳高。</div>
+      <div class="foot-note">價差策略（Bull Call／Bear Put／Bull Put／Bear Call）：「買進」＝支付權利金的那一腳；「賣出」＝收取權利金的那一腳。跨式／勒式（Straddle／Strangle）：上面兩個欄位改成「買權(Call)腳」跟「賣權(Put)腳」，買進跨勒式兩腳都是買進、賣出跨勒式兩腳都是賣出；跨式請把兩腳履約價填一樣，勒式填不同履約價（Call通常較高、Put通常較低）。</div>
     </div>
 
     <div class="card" id="o_legs_single_card" style="display:none;">
@@ -451,6 +455,7 @@
       <div class="tape">
         <div class="tape-track"></div>
         <div class="tape-marker" id="o_marker" data-label=""></div>
+        <div class="tape-marker" id="o_marker2" data-label="" style="display:none;"></div>
       </div>
       <div class="tape-labels"><span>← 最大虧損（綠）</span><span>最大獲利（紅）→</span></div>
       <div class="stat-grid">
@@ -464,9 +469,30 @@
     </div>
 
     <div class="card" id="o_margin_card">
-      <h2>價差保證金說明 — 台灣期交所</h2>
-      <div class="callout">組合單（同時送出、同一標的、同一到期月的價差委託）保證金公式：<b>履約價差 × 契約乘數(50)</b>（保守估計，實際會再扣掉已收淨權利金，所以真正金額通常更低）。</div>
-      <div class="foot-note">前提是兩腳有被券商系統辨識為合法組合單；如果分開下單、或不同到期月，賣出那一腳會被當作裸空計收保證金，改用金額高很多的 A值/B值 公式（可切到「單腳策略」查看）。「C值」是跨式／勒式（同時賣出買權＋賣出賣權）專用的保證金加成參數，跟本頁的價差策略無關，此處不列出以免混淆。實際核准與金額仍以下單當下期貨商系統及台灣期交所公告為準。</div>
+      <h2>價差保證金說明 — 台灣期交所<span class="badge" id="o_margin_c_updated" style="display:none;">讀取中…</span></h2>
+      <div id="o_margin_vspread_note" class="callout">組合單（同時送出、同一標的、同一到期月的價差委託）保證金公式：<b>履約價差 × 契約乘數(50)</b>（保守估計，實際會再扣掉已收淨權利金，所以真正金額通常更低）。</div>
+      <div id="o_margin_combo_long_note" class="callout" style="display:none;">買進跨式／勒式（Long Straddle／Strangle）<b>不需要保證金</b>，最大風險就是已付出的權利金（已經全額付清）。</div>
+      <div id="o_margin_combo_short_note" style="display:none;">
+        <div class="row">
+          <div class="field">
+            <label>標的現價（大盤／期貨參考價）</label>
+            <input type="number" id="o_spot" step="1">
+          </div>
+        </div>
+        <div class="callout">賣出跨式／勒式（Short Straddle／Strangle）保證金公式：<b>MAX(賣出Call保證金, 賣出Put保證金) ＋ 保證金較低那一邊的權利金市值 ＋ C值</b>，其中每一邊的「賣出保證金」＝權利金市值 ＋ MAX(A值－價外值, B值)。這是真的用你填的履約價、權利金、標的現價算出來的金額，會隨標的現價浮動。</div>
+        <div class="stat-grid">
+          <div class="stat"><div class="k">Call腳價外值</div><div class="v" id="o_c_call_otm">—</div></div>
+          <div class="stat"><div class="k">Put腳價外值</div><div class="v" id="o_c_put_otm">—</div></div>
+          <div class="stat"><div class="k">Call腳保證金</div><div class="v" id="o_c_call_margin">—</div></div>
+          <div class="stat"><div class="k">Put腳保證金</div><div class="v" id="o_c_put_margin">—</div></div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat"><div class="k">C值</div><div class="v" id="o_c_cvalue">—</div></div>
+          <div class="stat"><div class="k">原始保證金（總計）</div><div class="v" id="o_c_total">—</div></div>
+        </div>
+        <div class="foot-note">A值/B值/C值取自每日自動更新的台灣期交所公告（原始保證金層級）。深度價外（500點以上）依規定會加成 A/B 值 20%～50%，此工具已納入計算。實際核准金額仍以下單當下期貨商系統為準。</div>
+      </div>
+      <div class="foot-note">前提是兩腳有被券商系統辨識為合法組合單；如果分開下單、或不同到期月，賣出那一腳會被當作裸空計收保證金，改用金額高很多的 A值/B值 公式（可切到「單腳策略」查看）。實際核准與金額仍以下單當下期貨商系統及台灣期交所公告為準。</div>
     </div>
 
     <div class="card" id="o_margin_single_card" style="display:none;">
@@ -544,6 +570,7 @@ document.querySelectorAll('.seg').forEach(seg=>{
 document.getElementById('clock').textContent = '台股當沖 / 台指期貨 / 台指選擇權 · ' + new Date().toLocaleDateString('zh-TW');
 
 // ---------- helpers ----------
+let MARGIN_DATA = null; // 每日自動更新的台灣期交所保證金資料，C值保證金計算要用
 const fmt = n => (Math.round(n*100)/100).toLocaleString('zh-TW', {minimumFractionDigits:2, maximumFractionDigits:2});
 const fmt0 = n => Math.round(n).toLocaleString('zh-TW');
 const pctFmt = n => (n>=0?'+':'') + (Math.round(n*10000)/100).toFixed(2) + '%';
@@ -759,6 +786,13 @@ function calcOpt(){
   if(mode === 'single') calcOptSingle(); else calcOptSpread();
 }
 
+const COMBO_STRATS = ['longstraddle','shortstraddle','longstrangle','shortstrangle'];
+function otmSurcharge(otmPoints){
+  if(otmPoints >= 1000) return 1.5;
+  if(otmPoints >= 500) return 1.2;
+  return 1.0;
+}
+
 function calcOptSpread(){
   const strategy = document.querySelector('#o_strategy .on').dataset.v;
   const willClose = document.querySelector('#o_close .on').dataset.v === 'close';
@@ -768,17 +802,33 @@ function calcOptSpread(){
   const sellPrem = parseFloat(document.getElementById('o_sell_prem').value)||0;
   const lots = parseFloat(document.getElementById('o_lots').value)||1;
   const optFee = parseFloat(document.getElementById('o_fee').value)||0;
+  const isCombo = COMBO_STRATS.includes(strategy);
+  const isComboLong = strategy==='longstraddle' || strategy==='longstrangle';
 
-  const isCall = (strategy==='bullcall' || strategy==='bearcall');
-  const isCredit = (strategy==='bullput' || strategy==='bearcall');
-  const legSuffix = isCredit ? ['保護腳', '收權利金腳'] : ['主要部位腳', '降低成本腳'];
-  document.getElementById('o_buy_label').innerHTML = (isCall ? '買進買權履約價 (Call)' : '買進賣權履約價 (Put)') + '<br><span class="leg-suffix">' + legSuffix[0] + '</span>';
-  document.getElementById('o_sell_label').innerHTML = (isCall ? '賣出買權履約價 (Call)' : '賣出賣權履約價 (Put)') + '<br><span class="leg-suffix">' + legSuffix[1] + '</span>';
+  if(isCombo){
+    const action = isComboLong ? '買進' : '賣出';
+    document.getElementById('o_buy_label').innerHTML = `${action}買權(Call)履約價`;
+    document.getElementById('o_buy_prem_label').textContent = `${action}買權(Call)權利金（點）`;
+    document.getElementById('o_sell_label').innerHTML = `${action}賣權(Put)履約價`;
+    document.getElementById('o_sell_prem_label').textContent = `${action}賣權(Put)權利金（點）`;
+  } else {
+    const isCall = (strategy==='bullcall' || strategy==='bearcall');
+    const isCredit = (strategy==='bullput' || strategy==='bearcall');
+    const legSuffix = isCredit ? ['保護腳', '收權利金腳'] : ['主要部位腳', '降低成本腳'];
+    document.getElementById('o_buy_label').innerHTML = (isCall ? '買進買權履約價 (Call)' : '買進賣權履約價 (Put)') + '<br><span class="leg-suffix">' + legSuffix[0] + '</span>';
+    document.getElementById('o_buy_prem_label').textContent = '買進權利金（點）';
+    document.getElementById('o_sell_label').innerHTML = (isCall ? '賣出買權履約價 (Call)' : '賣出賣權履約價 (Put)') + '<br><span class="leg-suffix">' + legSuffix[1] + '</span>';
+    document.getElementById('o_sell_prem_label').textContent = '賣出權利金（點）';
+  }
 
   const PT = 50; // TXO 每點金額
   const buyPremAmt = buyPrem*PT*lots;
   const sellPremAmt = sellPrem*PT*lots;
-  const rawNetDebit = buyPremAmt - sellPremAmt;
+  // 價差策略：一買一賣，淨成本 = 買進權利金 － 賣出權利金
+  // 跨式／勒式：兩腳同方向（都買進或都賣出），買進跨勒式淨成本 = 兩腳相加；賣出跨勒式是淨收入，用負號表示
+  const rawNetDebit = isCombo
+    ? (isComboLong ? (buyPremAmt + sellPremAmt) : -(buyPremAmt + sellPremAmt))
+    : (buyPremAmt - sellPremAmt);
 
   // 開倉成本
   const openFee = optFee*2*lots;
@@ -802,7 +852,7 @@ function calcOptSpread(){
     costNote +=
       `<br><br>【留倉到結算】<br>` +
       `・假設兩腳都價外歸零：不收手續費、不課期交稅<br>` +
-      `・若有一腳（或兩腳）價內履約：該腳另計結算手續費（比照開倉費率）＋結算期交稅（稅率只有 0.002%，用「結算價 × 契約乘數(50) × 0.002%」，不是平倉的 0.1%）。價差策略要看結算價落在哪個履約價區間才知道哪一腳價內，這裡不強行試算，請自行依結算價概估`;
+      `・若有一腳（或兩腳）價內履約：該腳另計結算手續費（比照開倉費率）＋結算期交稅（稅率只有 0.002%，用「結算價 × 契約乘數(50) × 0.002%」，不是平倉的 0.1%）。要看結算價落在哪個履約價區間才知道哪一腳價內，這裡不強行試算，請自行依結算價概估`;
   }
 
   const netDebitAfterCost = rawNetDebit + totalCost;
@@ -810,7 +860,7 @@ function calcOptSpread(){
   const upperStrike = Math.max(buyStrike, sellStrike);
   const lowerStrike = Math.min(buyStrike, sellStrike);
 
-  let maxLoss, maxProfit, bep;
+  let maxLoss, maxProfit, bep, bepUpper, bepLower;
   if(strategy==='bullcall'){
     maxLoss = netDebitAfterCost;
     maxProfit = width - netDebitAfterCost;
@@ -823,34 +873,60 @@ function calcOptSpread(){
     maxProfit = -netDebitAfterCost;
     maxLoss = width + netDebitAfterCost;
     bep = sellStrike + netDebitAfterCost/(PT*lots);
-  } else { // bearcall
+  } else if(strategy==='bearcall'){
     maxProfit = -netDebitAfterCost;
     maxLoss = width + netDebitAfterCost;
     bep = sellStrike - netDebitAfterCost/(PT*lots);
+  } else if(isComboLong){ // longstraddle / longstrangle：buyStrike=Call, sellStrike=Put
+    maxLoss = netDebitAfterCost;
+    maxProfit = Infinity;
+    bepUpper = buyStrike + netDebitAfterCost/(PT*lots);
+    bepLower = sellStrike - netDebitAfterCost/(PT*lots);
+  } else { // shortstraddle / shortstrangle
+    maxProfit = -netDebitAfterCost;
+    maxLoss = Infinity;
+    bepUpper = buyStrike + netDebitAfterCost/(PT*lots);
+    bepLower = sellStrike - netDebitAfterCost/(PT*lots);
   }
+  if(isCombo){ bep = (bepUpper+bepLower)/2; } // 僅供缺口計算/顯示用，實際兩平點看下面
 
   document.getElementById('o_netdebit').textContent = (netDebitAfterCost>=0 ? '淨支出 ' : '淨收入 ') + fmt0(Math.abs(netDebitAfterCost)) + ' 元';
   document.getElementById('o_netdebit').className = 'v ' + (netDebitAfterCost>=0 ? 'neg' : 'pos');
-  document.getElementById('o_bep').textContent = fmt(bep)+' 點';
-  document.getElementById('o_maxprofit').textContent = fmt0(Math.max(maxProfit,0))+' 元';
+  document.getElementById('o_bep').textContent = isCombo ? `${fmt(bepLower)} ／ ${fmt(bepUpper)} 點` : fmt(bep)+' 點';
+  document.getElementById('o_maxprofit').textContent = maxProfit===Infinity ? '無上限' : fmt0(Math.max(maxProfit,0))+' 元';
   document.getElementById('o_maxprofit').className = 'v pos';
-  document.getElementById('o_maxloss').textContent = fmt0(Math.max(maxLoss,0))+' 元';
+  document.getElementById('o_maxloss').textContent = maxLoss===Infinity ? '無上限' : fmt0(Math.max(maxLoss,0))+' 元';
   document.getElementById('o_maxloss').className = 'v neg';
   document.getElementById('o_costnote').innerHTML = costNote;
 
   // gauge
-  const lo = Math.min(buyStrike,sellStrike) - width/(PT*lots)*0.4 - 50;
-  const hi = Math.max(buyStrike,sellStrike) + width/(PT*lots)*0.4 + 50;
+  const gaugeWidth = isCombo ? Math.abs(bepUpper-bepLower) : width/(PT*lots);
+  const lo = Math.min(buyStrike,sellStrike) - gaugeWidth*0.4 - 50;
+  const hi = Math.max(buyStrike,sellStrike) + gaugeWidth*0.4 + 50;
   const span = hi-lo;
-  const pct = ((bep-lo)/span)*100;
-  document.getElementById('o_marker').style.left = Math.min(96,Math.max(4,pct))+'%';
-  document.getElementById('o_marker').setAttribute('data-label', '損平 '+fmt(bep));
+  document.getElementById('o_marker2').style.display = isCombo ? '' : 'none';
+  if(isCombo){
+    const pctLo = ((bepLower-lo)/span)*100;
+    const pctHi = ((bepUpper-lo)/span)*100;
+    document.getElementById('o_marker').style.left = Math.min(96,Math.max(4,pctLo))+'%';
+    document.getElementById('o_marker').setAttribute('data-label', '損平 '+fmt(bepLower));
+    document.getElementById('o_marker2').style.left = Math.min(96,Math.max(4,pctHi))+'%';
+    document.getElementById('o_marker2').setAttribute('data-label', '損平 '+fmt(bepUpper));
+  } else {
+    const pct = ((bep-lo)/span)*100;
+    document.getElementById('o_marker').style.left = Math.min(96,Math.max(4,pct))+'%';
+    document.getElementById('o_marker').setAttribute('data-label', '損平 '+fmt(bep));
+  }
 
   const STRAT_NAMES = {
     bullcall: 'Bull Call Spread（買權多頭價差）',
     bearput: 'Bear Put Spread（賣權空頭價差）',
     bullput: 'Bull Put Spread（賣權多頭價差）',
-    bearcall: 'Bear Call Spread（買權空頭價差）'
+    bearcall: 'Bear Call Spread（買權空頭價差）',
+    longstraddle: 'Long Straddle（買進跨式）',
+    shortstraddle: 'Short Straddle（賣出跨式）',
+    longstrangle: 'Long Strangle（買進勒式）',
+    shortstrangle: 'Short Strangle（賣出勒式）'
   };
   const stratName = STRAT_NAMES[strategy];
   let shapeText;
@@ -860,10 +936,51 @@ function calcOptSpread(){
     shapeText = `結算價高於 ${fmt(bep)} 點時最大虧損為淨支出 ${fmt0(maxLoss)} 元；低於 ${fmt(lowerStrike)} 點則鎖定最大獲利 ${fmt0(Math.max(maxProfit,0))} 元。`;
   } else if(strategy==='bullput'){
     shapeText = `結算價低於 ${fmt(bep)} 點時開始虧損，跌破 ${fmt(lowerStrike)} 點（買進履約價）時鎖定最大虧損 ${fmt0(maxLoss)} 元；結算價等於或高於 ${fmt(upperStrike)} 點（賣出履約價）時鎖定最大獲利（收取的淨權利金）${fmt0(Math.max(maxProfit,0))} 元。`;
-  } else { // bearcall
+  } else if(strategy==='bearcall'){
     shapeText = `結算價高於 ${fmt(bep)} 點時開始虧損，漲破 ${fmt(upperStrike)} 點（買進履約價）時鎖定最大虧損 ${fmt0(maxLoss)} 元；結算價等於或低於 ${fmt(lowerStrike)} 點（賣出履約價）時鎖定最大獲利（收取的淨權利金）${fmt0(Math.max(maxProfit,0))} 元。`;
+  } else if(isComboLong){
+    shapeText = `結算價在 ${fmt(bepLower)} ～ ${fmt(bepUpper)} 點之間時是虧損區，結算價為履約價本身時虧損最大（淨支出 ${fmt0(maxLoss)} 元）；只要結算價跌破 ${fmt(bepLower)} 點或漲破 ${fmt(bepUpper)} 點就開始獲利，且理論上沒有上限（兩個方向都可能獲利，適合預期會大漲或大跌的行情）。`;
+  } else { // combo short
+    shapeText = `結算價在 ${fmt(bepLower)} ～ ${fmt(bepUpper)} 點之間時鎖定最大獲利（收取的淨權利金）${fmt0(Math.max(maxProfit,0))} 元；只要結算價跌破 ${fmt(bepLower)} 點或漲破 ${fmt(bepUpper)} 點就開始虧損，且理論上沒有上限——這是裸賣部位，風險極高，適合預期盤整的行情。`;
   }
-  document.getElementById('o_shape').innerHTML = `<b>${stratName}</b>：這是有限風險、有限獲利的策略。損益兩平點在 <b>${fmt(bep)}</b> 點。` + shapeText;
+  document.getElementById('o_shape').innerHTML = `<b>${stratName}</b>：損益兩平點在 <b>${isCombo ? fmt(bepLower)+' ／ '+fmt(bepUpper) : fmt(bep)}</b> 點。` + shapeText;
+
+  // ---------- 保證金區塊 ----------
+  document.getElementById('o_margin_vspread_note').style.display = isCombo ? 'none' : '';
+  document.getElementById('o_margin_combo_long_note').style.display = (isCombo && isComboLong) ? '' : 'none';
+  document.getElementById('o_margin_combo_short_note').style.display = (isCombo && !isComboLong) ? '' : 'none';
+  document.getElementById('o_margin_c_updated').style.display = (isCombo && !isComboLong) ? '' : 'none';
+
+  if(isCombo && !isComboLong){
+    if(!MARGIN_DATA){
+      document.getElementById('o_c_total').textContent = '資料載入中…';
+    } else {
+      const spot = parseFloat(document.getElementById('o_spot').value)||0;
+      const callStrike = buyStrike, callPrem = buyPrem;
+      const putStrike = sellStrike, putPrem = sellPrem;
+      const callOtmPts = Math.max(callStrike - spot, 0);
+      const putOtmPts = Math.max(spot - putStrike, 0);
+      const callOtmAmt = callOtmPts*PT*lots;
+      const putOtmAmt = putOtmPts*PT*lots;
+      const aInit = MARGIN_DATA.txo_a.initial*lots;
+      const bInit = MARGIN_DATA.txo_b.initial*lots;
+      const cInit = MARGIN_DATA.txo_c.initial*lots;
+      const callSur = otmSurcharge(callOtmPts);
+      const putSur = otmSurcharge(putOtmPts);
+      const callMargin = callPrem*PT*lots + Math.max(aInit*callSur - callOtmAmt, bInit*callSur);
+      const putMargin = putPrem*PT*lots + Math.max(aInit*putSur - putOtmAmt, bInit*putSur);
+      const lowerPremMarket = Math.min(callPrem, putPrem)*PT*lots;
+      const comboMargin = Math.max(callMargin, putMargin) + lowerPremMarket + cInit;
+
+      document.getElementById('o_c_call_otm').textContent = fmt(callOtmPts)+' 點';
+      document.getElementById('o_c_put_otm').textContent = fmt(putOtmPts)+' 點';
+      document.getElementById('o_c_call_margin').textContent = fmt0(callMargin)+' 元';
+      document.getElementById('o_c_put_margin').textContent = fmt0(putMargin)+' 元';
+      document.getElementById('o_c_cvalue').textContent = fmt0(cInit)+' 元';
+      document.getElementById('o_c_total').textContent = fmt0(comboMargin)+' 元';
+      document.getElementById('o_margin_c_updated').textContent = MARGIN_DATA.updated+' 更新';
+    }
+  }
 }
 
 function calcOptSingle(){
@@ -1018,6 +1135,7 @@ if('serviceWorker' in navigator){
 fetch('./margin-data.json?_=' + Date.now())
   .then(r => r.json())
   .then(d => {
+    MARGIN_DATA = d;
     const setCell = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = fmt0(v); };
     if(d.tx){ setCell('f_margin_tx_settle', d.tx.settle); setCell('f_margin_tx_maintain', d.tx.maintain); setCell('f_margin_tx_initial', d.tx.initial); }
     if(d.mtx){ setCell('f_margin_mtx_settle', d.mtx.settle); setCell('f_margin_mtx_maintain', d.mtx.maintain); setCell('f_margin_mtx_initial', d.mtx.initial); }
@@ -1027,6 +1145,7 @@ fetch('./margin-data.json?_=' + Date.now())
     const updatedText = d.updated ? d.updated+' 更新' : '更新日期未知';
     const fBadge = document.getElementById('f_margin_updated'); if(fBadge) fBadge.textContent = updatedText;
     const oBadge = document.getElementById('o_margin_updated'); if(oBadge) oBadge.textContent = updatedText;
+    recalcAll(); // C值保證金需要 MARGIN_DATA，資料到位後重算一次
   })
   .catch(() => {
     const fBadge = document.getElementById('f_margin_updated'); if(fBadge) fBadge.textContent = '資料載入失敗';
