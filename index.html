@@ -140,17 +140,17 @@
       <div class="row">
         <div class="field">
           <label>買進股價（元）</label>
-          <input type="number" id="s_price" value="74.3" step="0.01">
+          <input type="number" id="s_price" step="0.01">
         </div>
         <div class="field">
           <label>張數</label>
-          <input type="number" id="s_lots" value="1" step="1" min="1">
+          <input type="number" id="s_lots" step="1" min="1">
         </div>
       </div>
       <div class="row">
         <div class="field">
           <label>手續費折數（例：2.3 折輸入 2.3）</label>
-          <input type="number" id="s_discount" value="2.3" step="0.1" min="0.1">
+          <input type="number" id="s_discount" step="0.1" min="0.1">
         </div>
       </div>
       <div class="callout" id="s_costnote"></div>
@@ -185,11 +185,11 @@
       <div class="row">
         <div class="field" id="s_exit_field_price">
           <label>出場價格（元）</label>
-          <input type="number" id="s_exit_price" value="75" step="0.01">
+          <input type="number" id="s_exit_price" step="0.01">
         </div>
         <div class="field" id="s_exit_field_pct" style="display:none;">
           <label>目標報酬率（%）</label>
-          <input type="number" id="s_exit_pct" value="1" step="0.1">
+          <input type="number" id="s_exit_pct" step="0.1">
         </div>
       </div>
       <div class="stat-grid">
@@ -232,19 +232,19 @@
       <div class="row">
         <div class="field">
           <label>進場點位</label>
-          <input type="number" id="f_entry" value="22000" step="1">
+          <input type="number" id="f_entry" step="1">
         </div>
         <div class="field" id="f_exit_field_pts">
           <label>出場點位</label>
-          <input type="number" id="f_exit" value="22050" step="1">
+          <input type="number" id="f_exit" step="1">
         </div>
         <div class="field" id="f_exit_field_pct" style="display:none;">
           <label>出場報酬率（%）</label>
-          <input type="number" id="f_exit_pct" value="0.5" step="0.1">
+          <input type="number" id="f_exit_pct" step="0.1">
         </div>
         <div class="field">
           <label>口數</label>
-          <input type="number" id="f_lots" value="1" step="1" min="1">
+          <input type="number" id="f_lots" step="1" min="1">
         </div>
       </div>
       <div class="row">
@@ -260,11 +260,11 @@
       <div class="row">
         <div class="field">
           <label>小台 MTX 每口手續費（單邊，元）</label>
-          <input type="number" id="f_fee_mtx" value="18" step="1" min="0">
+          <input type="number" id="f_fee_mtx" step="1" min="0">
         </div>
         <div class="field">
           <label>微台 TMF 每口手續費（單邊，元）</label>
-          <input type="number" id="f_fee_tmf" value="15" step="1" min="0">
+          <input type="number" id="f_fee_tmf" step="1" min="0">
         </div>
       </div>
       <div class="foot-note">每點金額（MTX 50元／TMF 10元）與期交稅率為交易所固定規則，不受券商折數影響；手續費才是各家券商／折扣不同的部分，請填你實際拿到的報價。</div>
@@ -321,27 +321,27 @@
       <div class="row leg-row">
         <div class="field">
           <label id="o_buy_label">買進履約價</label>
-          <input type="number" id="o_buy_strike" value="22000" step="50">
+          <input type="number" id="o_buy_strike" step="50">
         </div>
         <div class="field">
           <label>買進權利金（點）</label>
-          <input type="number" id="o_buy_prem" value="180" step="1">
+          <input type="number" id="o_buy_prem" step="1">
         </div>
       </div>
       <div class="row leg-row">
         <div class="field">
           <label id="o_sell_label">賣出履約價</label>
-          <input type="number" id="o_sell_strike" value="22200" step="50">
+          <input type="number" id="o_sell_strike" step="50">
         </div>
         <div class="field">
           <label>賣出權利金（點）</label>
-          <input type="number" id="o_sell_prem" value="90" step="1">
+          <input type="number" id="o_sell_prem" step="1">
         </div>
       </div>
       <div class="row">
         <div class="field">
           <label>口數（組）</label>
-          <input type="number" id="o_lots" value="1" step="1" min="1">
+          <input type="number" id="o_lots" step="1" min="1">
         </div>
         <div class="field">
           <label>是否會提前平倉？</label>
@@ -354,7 +354,7 @@
       <div class="row">
         <div class="field">
           <label>每口每邊手續費（元）</label>
-          <input type="number" id="o_fee" value="15" step="1" min="0">
+          <input type="number" id="o_fee" step="1" min="0">
         </div>
       </div>
       <div class="foot-note">「買進」＝支付權利金的那一腳；「賣出」＝收取權利金的那一腳。Bull Call／Bear Put 是淨支出（debit）價差；Bull Put／Bear Call 是淨收入（credit）價差，通常賣出腳的權利金會比買進腳高。</div>
@@ -734,12 +734,31 @@ function recalcAll(){
   calcOpt();
 }
 
+// ---------- persist typed values across reloads ----------
+const INPUT_PERSIST_KEY = 'calcInputs';
+function loadPersistedInputs(){
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(INPUT_PERSIST_KEY) || '{}'); }catch(e){}
+  document.querySelectorAll('input[id]').forEach(el=>{
+    if(saved[el.id] !== undefined) el.value = saved[el.id];
+  });
+}
+function persistInput(el){
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(INPUT_PERSIST_KEY) || '{}'); }catch(e){}
+  saved[el.id] = el.value;
+  localStorage.setItem(INPUT_PERSIST_KEY, JSON.stringify(saved));
+}
+loadPersistedInputs();
+
 let recalcTimer = null;
 function debouncedRecalc(){
   clearTimeout(recalcTimer);
   recalcTimer = setTimeout(recalcAll, 250);
 }
-document.querySelectorAll('input').forEach(el=>el.addEventListener('input', debouncedRecalc));
+document.querySelectorAll('input').forEach(el=>{
+  el.addEventListener('input', ()=>{ persistInput(el); debouncedRecalc(); });
+});
 recalcAll();
 
 if('serviceWorker' in navigator){
