@@ -456,12 +456,9 @@
     </div>
 
     <div class="card" id="o_margin_card">
-      <h2>混合部位風險保證金（C值）— 台灣期交所<span class="badge">2026/07/06 更新</span></h2>
-      <div class="table-scroll"><table>
-        <thead><tr><th>項目</th><th>結算保證金</th><th>維持保證金</th><th>原始保證金</th></tr></thead>
-        <tbody><tr><td>臺指選擇權 C 值</td><td>12,600</td><td>13,000</td><td>17,000</td></tr></tbody>
-      </table></div>
-      <div class="foot-note">買一賣一同方向的價差組合通常適用 C 值計收（遠低於單邊裸露的 A/B 值），但實際核准與比例仍以下單當下期貨商系統及台灣期交所公告為準。此表僅適用於價差策略；單腳（尤其裸賣）保證金計算方式不同，請另洽券商。</div>
+      <h2>價差保證金說明 — 台灣期交所</h2>
+      <div class="callout">組合單（同時送出、同一標的、同一到期月的價差委託）保證金公式：<b>履約價差 × 契約乘數(50) － 已收淨權利金，下限為 0</b>。這個數字其實就等於上方「損益結構」卡片的<b>「最大虧損」</b>，不需要另外查表——debit 價差（Bull Call／Bear Put）已全額付清權利金，通常不需再額外保證金；credit 價差（Bull Put／Bear Call）才會被收這筆保證金。</div>
+      <div class="foot-note">前提是兩腳有被券商系統辨識為合法組合單；如果分開下單、或不同到期月，賣出那一腳會被當作裸空計收保證金，改用金額高很多的 A值/B值 公式（可切到「單腳策略」查看）。「C值」是跨式／勒式（同時賣出買權＋賣出賣權）專用的保證金加成參數，跟本頁的價差策略無關，此處不列出以免混淆。實際核准與金額仍以下單當下期貨商系統及台灣期交所公告為準。</div>
     </div>
 
     <div class="card" id="o_margin_single_card" style="display:none;">
