@@ -112,8 +112,7 @@
   .note-cell{font-size:11px; color:var(--amber); font-weight:700;}
 
   .stat-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px; margin-top:6px;}
-  .stat.wide{grid-column:span 2;}
-  .stat .v.compact{font-size:13px;}
+  .stat.wide{grid-column:1 / -1;}
   .stat{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:12px;}
   .stat .k{font-size:11px; color:var(--text-faint); margin-bottom:4px; min-height:28px;}
   .stat .v{font-family:var(--mono); font-size:17px; font-weight:700; white-space:nowrap;}
@@ -138,7 +137,6 @@
     th{font-size:14px;}
     .stat .k{font-size:14px; min-height:40px;}
     .stat .v{font-size:23px;}
-    .stat .v.compact{font-size:17px;}
     .callout{font-size:16px;}
     .foot-note{font-size:14px;}
     .badge{font-size:12.5px;}
@@ -496,8 +494,6 @@
         <div class="table-scroll"><table>
           <thead><tr><th>臺指選擇權風險保證金</th><th>結算</th><th>維持</th><th>原始</th></tr></thead>
           <tbody>
-            <tr><td>A值</td><td id="o_margin_c_a_settle">—</td><td id="o_margin_c_a_maintain">—</td><td id="o_margin_c_a_initial">—</td></tr>
-            <tr><td>B值</td><td id="o_margin_c_b_settle">—</td><td id="o_margin_c_b_maintain">—</td><td id="o_margin_c_b_initial">—</td></tr>
             <tr><td>C值</td><td id="o_margin_c_c_settle">—</td><td id="o_margin_c_c_maintain">—</td><td id="o_margin_c_c_initial">—</td></tr>
           </tbody>
         </table></div>
@@ -910,9 +906,7 @@ function calcOptSpread(){
   document.getElementById('o_netdebit').textContent = (netDebitAfterCost>=0 ? '淨支出 ' : '淨收入 ') + fmt0(Math.abs(netDebitAfterCost)) + ' 元';
   document.getElementById('o_netdebit').className = 'v ' + (netDebitAfterCost>=0 ? 'neg' : 'pos');
   document.getElementById('o_netdebit_stat').classList.toggle('wide', isCombo);
-  const bepEl = document.getElementById('o_bep');
-  bepEl.textContent = isCombo ? `${fmt(bepLower)} ／ ${fmt(bepUpper)} 點` : fmt(bep)+' 點';
-  bepEl.classList.toggle('compact', isCombo);
+  document.getElementById('o_bep').textContent = isCombo ? `${fmt(bepLower)} ／ ${fmt(bepUpper)} 點` : fmt(bep)+' 點';
   document.getElementById('o_bep_stat').classList.toggle('wide', isCombo);
   document.getElementById('o_maxprofit').textContent = maxProfit===Infinity ? '無上限' : fmt0(Math.max(maxProfit,0))+' 元';
   document.getElementById('o_maxprofit').className = 'v pos';
@@ -1006,7 +1000,6 @@ function calcOptSpread(){
 
 function calcOptSingle(){
   document.getElementById('o_bep_stat').classList.remove('wide');
-  document.getElementById('o_bep').classList.remove('compact');
   document.getElementById('o_netdebit_stat').classList.remove('wide');
   const strategy = document.querySelector('#o_strategy_single .on').dataset.v; // longcall/longput/shortcall/shortput
   const closeMode = document.querySelector('#o_single_close .on').dataset.v; // hold_otm/hold_itm/close
@@ -1186,8 +1179,6 @@ fetch('./margin-data.json?_=' + Date.now())
     if(d.tmf){ setCell('f_margin_tmf_settle', d.tmf.settle); setCell('f_margin_tmf_maintain', d.tmf.maintain); setCell('f_margin_tmf_initial', d.tmf.initial); }
     if(d.txo_a){ setCell('o_margin_a_settle', d.txo_a.settle); setCell('o_margin_a_maintain', d.txo_a.maintain); setCell('o_margin_a_initial', d.txo_a.initial); }
     if(d.txo_b){ setCell('o_margin_b_settle', d.txo_b.settle); setCell('o_margin_b_maintain', d.txo_b.maintain); setCell('o_margin_b_initial', d.txo_b.initial); }
-    if(d.txo_a){ setCell('o_margin_c_a_settle', d.txo_a.settle); setCell('o_margin_c_a_maintain', d.txo_a.maintain); setCell('o_margin_c_a_initial', d.txo_a.initial); }
-    if(d.txo_b){ setCell('o_margin_c_b_settle', d.txo_b.settle); setCell('o_margin_c_b_maintain', d.txo_b.maintain); setCell('o_margin_c_b_initial', d.txo_b.initial); }
     if(d.txo_c){ setCell('o_margin_c_c_settle', d.txo_c.settle); setCell('o_margin_c_c_maintain', d.txo_c.maintain); setCell('o_margin_c_c_initial', d.txo_c.initial); }
     const updatedText = d.updated ? d.updated+' 更新' : '更新日期未知';
     const fBadge = document.getElementById('f_margin_updated'); if(fBadge) fBadge.textContent = updatedText;
