@@ -68,6 +68,7 @@
   .row{display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;}
   .field{flex:1; min-width:120px;}
   .field label{display:block; font-size:12px; color:var(--text-dim); margin-bottom:6px;}
+  .leg-row label{min-height:34px; line-height:1.4;}
   .field input, .field select{
     width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text);
     padding:9px 10px; border-radius:7px; font-family:var(--mono); font-size:14px; font-weight:600;
@@ -315,7 +316,7 @@
 
     <div class="card">
       <h2>兩腳部位</h2>
-      <div class="row">
+      <div class="row leg-row">
         <div class="field">
           <label id="o_buy_label">買進履約價</label>
           <input type="number" id="o_buy_strike" value="22000" step="50">
@@ -325,7 +326,7 @@
           <input type="number" id="o_buy_prem" value="180" step="1">
         </div>
       </div>
-      <div class="row">
+      <div class="row leg-row">
         <div class="field">
           <label id="o_sell_label">賣出履約價</label>
           <input type="number" id="o_sell_strike" value="22200" step="50">
