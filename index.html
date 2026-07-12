@@ -246,10 +246,13 @@
         <div class="field">
           <label>商品</label>
           <div class="seg" id="f_product">
+            <button data-v="TX">大台 TX</button>
             <button class="on" data-v="MTX">小台 MTX</button>
             <button data-v="TMF">微台 TMF</button>
           </div>
         </div>
+      </div>
+      <div class="row">
         <div class="field">
           <label>方向</label>
           <div class="seg" id="f_dir">
@@ -288,6 +291,10 @@
       <div class="foot-note" id="f_exit_computed"></div>
       <div class="row">
         <div class="field">
+          <label>大台 TX 每口手續費（單邊，元）</label>
+          <input type="number" id="f_fee_tx" step="1" min="0">
+        </div>
+        <div class="field">
           <label>小台 MTX 每口手續費（單邊，元）</label>
           <input type="number" id="f_fee_mtx" step="1" min="0">
         </div>
@@ -296,7 +303,7 @@
           <input type="number" id="f_fee_tmf" step="1" min="0">
         </div>
       </div>
-      <div class="foot-note">每點金額（MTX 50元／TMF 10元）與期交稅率為交易所固定規則，不受券商折數影響；手續費才是各家券商／折扣不同的部分，請填你實際拿到的報價。</div>
+      <div class="foot-note">每點金額（TX 200元／MTX 50元／TMF 10元）與期交稅率為交易所固定規則，不受券商折數影響；手續費才是各家券商／折扣不同的部分，請填你實際拿到的報價。</div>
     </div>
 
     <div class="card">
@@ -325,6 +332,7 @@
       <div class="table-scroll"><table>
         <thead><tr><th>商品</th><th>結算保證金</th><th>維持保證金</th><th>原始保證金</th></tr></thead>
         <tbody>
+          <tr><td>臺股期貨（大台 TX）</td><td id="f_margin_tx_settle">—</td><td id="f_margin_tx_maintain">—</td><td id="f_margin_tx_initial">—</td></tr>
           <tr><td>小型臺指期貨（MTX）</td><td id="f_margin_mtx_settle">—</td><td id="f_margin_mtx_maintain">—</td><td id="f_margin_mtx_initial">—</td></tr>
           <tr><td>微型臺指期貨（TMF）</td><td id="f_margin_tmf_settle">—</td><td id="f_margin_tmf_maintain">—</td><td id="f_margin_tmf_initial">—</td></tr>
         </tbody>
@@ -684,16 +692,18 @@ function calcStock(){
 }
 
 // ---------- 台指期貨 ----------
-const FUT_POINT = { MTX:50, TMF:10 }; // 每點金額，交易所固定
+const FUT_POINT = { TX:200, MTX:50, TMF:10 }; // 每點金額，交易所固定
 function calcFut(){
   const product = document.querySelector('#f_product .on').dataset.v;
   const dir = parseInt(document.querySelector('#f_dir .on').dataset.v);
   const entry = parseFloat(document.getElementById('f_entry').value)||0;
   const exitMode = document.querySelector('#f_exit_mode .on').dataset.v;
   const lots = parseFloat(document.getElementById('f_lots').value)||1;
+  const feeTx = parseFloat(document.getElementById('f_fee_tx').value)||0;
   const feeMtx = parseFloat(document.getElementById('f_fee_mtx').value)||0;
   const feeTmf = parseFloat(document.getElementById('f_fee_tmf').value)||0;
-  const spec = { point: FUT_POINT[product], fee: product==='MTX' ? feeMtx : feeTmf };
+  const FUT_FEE = { TX:feeTx, MTX:feeMtx, TMF:feeTmf };
+  const spec = { point: FUT_POINT[product], fee: FUT_FEE[product] };
 
   let exit;
   if(exitMode==='pct'){
@@ -991,6 +1001,7 @@ fetch('./margin-data.json?_=' + Date.now())
   .then(r => r.json())
   .then(d => {
     const setCell = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = fmt0(v); };
+    if(d.tx){ setCell('f_margin_tx_settle', d.tx.settle); setCell('f_margin_tx_maintain', d.tx.maintain); setCell('f_margin_tx_initial', d.tx.initial); }
     if(d.mtx){ setCell('f_margin_mtx_settle', d.mtx.settle); setCell('f_margin_mtx_maintain', d.mtx.maintain); setCell('f_margin_mtx_initial', d.mtx.initial); }
     if(d.tmf){ setCell('f_margin_tmf_settle', d.tmf.settle); setCell('f_margin_tmf_maintain', d.tmf.maintain); setCell('f_margin_tmf_initial', d.tmf.initial); }
     if(d.txo_a){ setCell('o_margin_a_settle', d.txo_a.settle); setCell('o_margin_a_maintain', d.txo_a.maintain); setCell('o_margin_a_initial', d.txo_a.initial); }

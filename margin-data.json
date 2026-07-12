@@ -1,5 +1,10 @@
 {
   "updated": "2026/07/06",
+  "tx": {
+    "settle": 471000,
+    "maintain": 488000,
+    "initial": 636000
+  },
   "mtx": {
     "settle": 117750,
     "maintain": 122000,

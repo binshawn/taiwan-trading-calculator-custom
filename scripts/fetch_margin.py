@@ -13,6 +13,7 @@ OUTPUT_PATH = "margin-data.json"
 
 # CSV 商品別欄位名稱 -> margin-data.json 裡對應的 key
 ROW_MAP = {
+    "臺股期貨": "tx",
     "小型臺指": "mtx",
     "微型臺指期貨": "tmf",
     "臺指選擇權風險保證金(A)值": "txo_a",
