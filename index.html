@@ -151,13 +151,13 @@
 
   <div class="board-head">
     <h1><span class="dot"></span>損益試算機<span class="badge">手續費自訂版</span></h1>
-    <div class="sub" id="clock">TAIEX · 台股當沖 / 台指期貨 / 選擇權價差</div>
+    <div class="sub" id="clock">TAIEX · 台股當沖 / 台指期貨 / 台指選擇權</div>
   </div>
 
   <div class="tabs">
     <div class="tab active" data-tab="stock">股票當沖</div>
     <div class="tab" data-tab="fut">台指期貨</div>
-    <div class="tab" data-tab="opt">選擇權價差</div>
+    <div class="tab" data-tab="opt">台指選擇權</div>
   </div>
 
   <!-- ============ 股票當沖 ============ -->
@@ -331,9 +331,17 @@
     </div>
   </div>
 
-  <!-- ============ 選擇權價差 ============ -->
+  <!-- ============ 台指選擇權 ============ -->
   <div class="panel" id="panel-opt">
     <div class="card">
+      <h2>模式</h2>
+      <div class="seg" id="o_mode">
+        <button class="on" data-v="spread">價差策略</button>
+        <button data-v="single">單腳策略</button>
+      </div>
+    </div>
+
+    <div class="card" id="o_strategy_spread_card">
       <h2>策略</h2>
       <div class="seg" id="o_strategy">
         <button class="on" data-v="bullcall">買權多頭價差<span class="strat-en">Bull Call</span></button>
@@ -343,8 +351,18 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2>兩腳部位</h2>
+    <div class="card" id="o_strategy_single_card" style="display:none;">
+      <h2>策略</h2>
+      <div class="seg" id="o_strategy_single">
+        <button class="on" data-v="longcall">買進買權<span class="strat-en">Long Call</span></button>
+        <button data-v="longput">買進賣權<span class="strat-en">Long Put</span></button>
+        <button data-v="shortcall">賣出買權<span class="strat-en">Short Call</span></button>
+        <button data-v="shortput">賣出賣權<span class="strat-en">Short Put</span></button>
+      </div>
+    </div>
+
+    <div class="card" id="o_legs_spread_card">
+      <h2>雙腳部位</h2>
       <div class="row leg-row">
         <div class="field">
           <label id="o_buy_label">買進履約價</label>
@@ -387,6 +405,34 @@
       <div class="foot-note">「買進」＝支付權利金的那一腳；「賣出」＝收取權利金的那一腳。Bull Call／Bear Put 是淨支出（debit）價差；Bull Put／Bear Call 是淨收入（credit）價差，通常賣出腳的權利金會比買進腳高。</div>
     </div>
 
+    <div class="card" id="o_legs_single_card" style="display:none;">
+      <h2>單腳部位</h2>
+      <div class="row">
+        <div class="field">
+          <label id="o_single_label">履約價</label>
+          <input type="number" id="o_single_strike" step="50">
+        </div>
+        <div class="field">
+          <label>權利金（點）</label>
+          <input type="number" id="o_single_prem" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>口數（口）</label>
+          <input type="number" id="o_single_lots" step="1" min="1">
+        </div>
+        <div class="field">
+          <label>是否會提前平倉？</label>
+          <div class="seg" id="o_single_close">
+            <button class="on" data-v="hold">留倉到結算</button>
+            <button data-v="close">會提前平倉</button>
+          </div>
+        </div>
+      </div>
+      <div class="foot-note">手續費沿用上方「每口每邊手續費」設定。裸賣（Short Call／Short Put）風險極高，Short Call 的最大虧損理論上沒有上限；保證金要求也遠高於價差策略，下單前務必確認自己的風險承受度與券商保證金規定。</div>
+    </div>
+
     <div class="card">
       <h2>損益結構</h2>
       <div class="tape">
@@ -404,13 +450,25 @@
       <div class="foot-note" id="o_costnote"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="o_margin_card">
       <h2>混合部位風險保證金（C值）— 台灣期交所<span class="badge">2026/07/06 更新</span></h2>
       <div class="table-scroll"><table>
         <thead><tr><th>項目</th><th>結算保證金</th><th>維持保證金</th><th>原始保證金</th></tr></thead>
         <tbody><tr><td>臺指選擇權 C 值</td><td>12,600</td><td>13,000</td><td>17,000</td></tr></tbody>
       </table></div>
-      <div class="foot-note">買一賣一同方向的價差組合通常適用 C 值計收（遠低於單邊裸露的 A/B 值），但實際核准與比例仍以下單當下期貨商系統及台灣期交所公告為準。</div>
+      <div class="foot-note">買一賣一同方向的價差組合通常適用 C 值計收（遠低於單邊裸露的 A/B 值），但實際核准與比例仍以下單當下期貨商系統及台灣期交所公告為準。此表僅適用於價差策略；單腳（尤其裸賣）保證金計算方式不同，請另洽券商。</div>
+    </div>
+
+    <div class="card" id="o_margin_single_card" style="display:none;">
+      <h2>單腳保證金說明 — 台灣期交所</h2>
+      <div class="table-scroll"><table>
+        <thead><tr><th>策略</th><th>是否需要保證金</th></tr></thead>
+        <tbody>
+          <tr><td>買進買權／買進賣權（Long Call／Long Put）</td><td>不需要，最大風險就是已付出的權利金</td></tr>
+          <tr><td>賣出買權／賣出賣權（Short Call／Short Put，裸賣）</td><td>需要，且金額每日變動</td></tr>
+        </tbody>
+      </table></div>
+      <div class="foot-note">裸賣保證金採 MAX(A值, B值) 公式：A值＝權利金×標的乘數＋MAX(原始保證金－價外損失, 最低結算保證金)；B值＝權利金×標的乘數＋原始保證金×1/2。金額會隨標的物收盤價、履約價、權利金每日浮動，並非固定表格數字，本工具不做即時試算，請以下單當下期貨商系統試算或台灣期交所官網（taifex.com.tw）公告為準。</div>
     </div>
   </div>
 
@@ -453,10 +511,19 @@ document.querySelectorAll('.seg').forEach(seg=>{
       document.getElementById('s_exit_field_price').style.display = isPct ? 'none' : '';
       document.getElementById('s_exit_field_pct').style.display = isPct ? '' : 'none';
     }
+    if(seg.id === 'o_mode'){
+      const isSingle = btn.dataset.v === 'single';
+      document.getElementById('o_strategy_spread_card').style.display = isSingle ? 'none' : '';
+      document.getElementById('o_strategy_single_card').style.display = isSingle ? '' : 'none';
+      document.getElementById('o_legs_spread_card').style.display = isSingle ? 'none' : '';
+      document.getElementById('o_legs_single_card').style.display = isSingle ? '' : 'none';
+      document.getElementById('o_margin_card').style.display = isSingle ? 'none' : '';
+      document.getElementById('o_margin_single_card').style.display = isSingle ? '' : 'none';
+    }
     recalcAll();
   });
 });
-document.getElementById('clock').textContent = '台股當沖 / 台指期貨 / 選擇權價差 · ' + new Date().toLocaleDateString('zh-TW');
+document.getElementById('clock').textContent = '台股當沖 / 台指期貨 / 台指選擇權 · ' + new Date().toLocaleDateString('zh-TW');
 
 // ---------- helpers ----------
 const fmt = n => (Math.round(n*100)/100).toLocaleString('zh-TW', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -666,8 +733,13 @@ function calcFut(){
   document.getElementById('f_shape').textContent = shape;
 }
 
-// ---------- 選擇權價差 ----------
+// ---------- 台指選擇權 ----------
 function calcOpt(){
+  const mode = document.querySelector('#o_mode .on').dataset.v;
+  if(mode === 'single') calcOptSingle(); else calcOptSpread();
+}
+
+function calcOptSpread(){
   const strategy = document.querySelector('#o_strategy .on').dataset.v;
   const willClose = document.querySelector('#o_close .on').dataset.v === 'close';
   const buyStrike = parseFloat(document.getElementById('o_buy_strike').value)||0;
@@ -761,6 +833,99 @@ function calcOpt(){
     shapeText = `結算價高於 ${fmt(bep)} 點時開始虧損，漲破 ${fmt(upperStrike)} 點（買進履約價）時鎖定最大虧損 ${fmt0(maxLoss)} 元；結算價等於或低於 ${fmt(lowerStrike)} 點（賣出履約價）時鎖定最大獲利（收取的淨權利金）${fmt0(Math.max(maxProfit,0))} 元。`;
   }
   document.getElementById('o_shape').innerHTML = `<b>${stratName}</b>：這是有限風險、有限獲利的策略。損益兩平點在 <b>${fmt(bep)}</b> 點。` + shapeText;
+}
+
+function calcOptSingle(){
+  const strategy = document.querySelector('#o_strategy_single .on').dataset.v; // longcall/longput/shortcall/shortput
+  const willClose = document.querySelector('#o_single_close .on').dataset.v === 'close';
+  const strike = parseFloat(document.getElementById('o_single_strike').value)||0;
+  const prem = parseFloat(document.getElementById('o_single_prem').value)||0;
+  const lots = parseFloat(document.getElementById('o_single_lots').value)||1;
+  const optFee = parseFloat(document.getElementById('o_fee').value)||0;
+
+  const isCall = (strategy==='longcall' || strategy==='shortcall');
+  const isLong = (strategy==='longcall' || strategy==='longput');
+  document.getElementById('o_single_label').textContent = isCall ? '買權履約價 (Call)' : '賣權履約價 (Put)';
+
+  const PT = 50; // TXO 每點金額
+  const premAmt = prem*PT*lots;
+
+  const openFee = optFee*1*lots;
+  const openTax = premAmt*0.001;
+  let totalCost = openFee + openTax;
+  let costNote = `開倉成本：手續費 1 腳 × ${fmt0(optFee)} 元 × ${lots} 口 = ${fmt0(openFee)} 元；期交稅（權利金×0.1%）= ${fmt0(openTax)} 元。`;
+
+  if(willClose){
+    const closeFee = optFee*1*lots;
+    const closeTax = premAmt*0.001;
+    totalCost += closeFee + closeTax;
+    costNote += ` 因提前平倉，另計平倉手續費 ${fmt0(closeFee)} 元＋平倉期交稅（此處先以開倉權利金金額概估 ${fmt0(closeTax)} 元，實際請以平倉當下報價覆核）。`;
+  }
+
+  const notional = strike*PT*lots;
+  let netAmt, maxLoss, maxProfit, bep;
+
+  if(isLong){
+    netAmt = premAmt + totalCost; // 淨支出
+    maxLoss = netAmt;
+    if(isCall){
+      maxProfit = Infinity;
+      bep = strike + netAmt/(PT*lots);
+    } else {
+      maxProfit = Math.max(notional - netAmt, 0);
+      bep = strike - netAmt/(PT*lots);
+    }
+  } else {
+    netAmt = premAmt - totalCost; // 通常為淨收入
+    maxProfit = netAmt;
+    if(isCall){
+      maxLoss = Infinity;
+      bep = strike + netAmt/(PT*lots);
+    } else {
+      maxLoss = Math.max(notional - netAmt, 0);
+      bep = strike - netAmt/(PT*lots);
+    }
+  }
+
+  const netLabel = isLong
+    ? '淨支出 ' + fmt0(netAmt) + ' 元'
+    : (netAmt>=0 ? '淨收入 ' : '淨支出 ') + fmt0(Math.abs(netAmt)) + ' 元';
+  document.getElementById('o_netdebit').textContent = netLabel;
+  document.getElementById('o_netdebit').className = 'v ' + (isLong ? 'neg' : (netAmt>=0 ? 'pos' : 'neg'));
+  document.getElementById('o_bep').textContent = fmt(bep)+' 點';
+  document.getElementById('o_maxprofit').textContent = maxProfit===Infinity ? '無上限' : fmt0(Math.max(maxProfit,0))+' 元';
+  document.getElementById('o_maxprofit').className = 'v pos';
+  document.getElementById('o_maxloss').textContent = maxLoss===Infinity ? '無上限' : fmt0(Math.max(maxLoss,0))+' 元';
+  document.getElementById('o_maxloss').className = 'v neg';
+  document.getElementById('o_costnote').textContent = costNote;
+
+  // gauge
+  const range = Math.max(Math.abs(bep-strike), strike*0.02)*2.4 + 1;
+  const lo = Math.min(strike,bep) - range*0.3;
+  const hi = Math.max(strike,bep) + range*0.3;
+  const span = hi-lo;
+  const pct = ((bep-lo)/span)*100;
+  document.getElementById('o_marker').style.left = Math.min(96,Math.max(4,pct))+'%';
+  document.getElementById('o_marker').setAttribute('data-label', '損平 '+fmt(bep));
+
+  const STRAT_NAMES_SINGLE = {
+    longcall: 'Long Call（買進買權）',
+    longput: 'Long Put（買進賣權）',
+    shortcall: 'Short Call（賣出買權，裸賣）',
+    shortput: 'Short Put（賣出賣權，裸賣）'
+  };
+  const stratName = STRAT_NAMES_SINGLE[strategy];
+  let shapeText;
+  if(strategy==='longcall'){
+    shapeText = `結算價低於 ${fmt(bep)} 點時最大虧損為淨支出 ${fmt0(maxLoss)} 元（已鎖定）；高於 ${fmt(bep)} 點後獲利隨結算價上漲而增加，理論上沒有上限。`;
+  } else if(strategy==='longput'){
+    shapeText = `結算價高於 ${fmt(bep)} 點時最大虧損為淨支出 ${fmt0(maxLoss)} 元（已鎖定）；低於 ${fmt(bep)} 點後獲利隨結算價下跌而增加，結算價為 0 時達到最高 ${fmt0(maxProfit)} 元。`;
+  } else if(strategy==='shortcall'){
+    shapeText = `結算價低於 ${fmt(bep)} 點時鎖定最大獲利（收取的淨權利金）${fmt0(maxProfit)} 元；高於 ${fmt(bep)} 點後虧損隨結算價上漲而擴大，理論上沒有上限——這是裸賣部位，風險極高。`;
+  } else { // shortput
+    shapeText = `結算價高於 ${fmt(bep)} 點時鎖定最大獲利（收取的淨權利金）${fmt0(maxProfit)} 元；低於 ${fmt(bep)} 點後虧損隨結算價下跌而擴大，結算價為 0 時達到最高虧損 ${fmt0(maxLoss)} 元——這是裸賣部位，風險較高。`;
+  }
+  document.getElementById('o_shape').innerHTML = `<b>${stratName}</b>：損益兩平點在 <b>${fmt(bep)}</b> 點。` + shapeText;
 }
 
 function recalcAll(){
