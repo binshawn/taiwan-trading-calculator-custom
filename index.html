@@ -784,16 +784,25 @@ function calcOptSpread(){
   const openFee = optFee*2*lots;
   const openTax = (buyPremAmt + sellPremAmt)*0.001;
   let totalCost = openFee + openTax;
-  let costNote = `開倉成本：手續費 2 腳 × ${fmt0(optFee)} 元 × ${lots} 組 = ${fmt0(openFee)} 元；期交稅（權利金×0.1%，雙腳）= ${fmt0(openTax)} 元。`;
+  let costNote =
+    `【開倉】<br>` +
+    `・手續費：2 腳 × ${fmt0(optFee)} 元 × ${lots} 組 = ${fmt0(openFee)} 元<br>` +
+    `・期交稅：雙腳權利金合計 × 0.1% = ${fmt0(openTax)} 元`;
 
   if(willClose){
     const closeFee = optFee*2*lots;
     // 平倉稅金額未知（需輸入平倉權利金），此處以開倉權利金近似提示
     const closeTax = (buyPremAmt + sellPremAmt)*0.001;
     totalCost += closeFee + closeTax;
-    costNote += ` 因提前平倉，另計平倉手續費 ${fmt0(closeFee)} 元＋平倉期交稅（以平倉當下權利金金額×0.1%計，此處先以開倉權利金金額概估 ${fmt0(closeTax)} 元，實際請以平倉當下報價覆核）。`;
+    costNote +=
+      `<br><br>【提前平倉】（跟開倉一樣，再收一次）<br>` +
+      `・手續費：2 腳 × ${fmt0(optFee)} 元 × ${lots} 組 = ${fmt0(closeFee)} 元<br>` +
+      `・期交稅（稅率 0.1%）：雙腳權利金合計 × 0.1% ≈ ${fmt0(closeTax)} 元（此處先以開倉權利金金額概估，實際請以平倉當下報價覆核）`;
   } else {
-    costNote += ` 上述試算假設留倉到結算時兩腳都價外歸零、不收手續費不課稅。若結算時有一腳（或兩腳）價內履約，該腳會另計一筆結算手續費（比照原下單管道費率）＋結算期交稅（結算價×契約乘數×0.00002），因為價差策略要看結算價落在哪個履約價區間，這裡不強行試算，請自行依結算價概估。`;
+    costNote +=
+      `<br><br>【留倉到結算】<br>` +
+      `・假設兩腳都價外歸零：不收手續費、不課期交稅<br>` +
+      `・若有一腳（或兩腳）價內履約：該腳另計結算手續費（比照開倉費率）＋結算期交稅（稅率只有 0.002%，用「結算價 × 契約乘數(50) × 0.002%」，不是平倉的 0.1%）。價差策略要看結算價落在哪個履約價區間才知道哪一腳價內，這裡不強行試算，請自行依結算價概估`;
   }
 
   const netDebitAfterCost = rawNetDebit + totalCost;
@@ -827,7 +836,7 @@ function calcOptSpread(){
   document.getElementById('o_maxprofit').className = 'v pos';
   document.getElementById('o_maxloss').textContent = fmt0(Math.max(maxLoss,0))+' 元';
   document.getElementById('o_maxloss').className = 'v neg';
-  document.getElementById('o_costnote').textContent = costNote;
+  document.getElementById('o_costnote').innerHTML = costNote;
 
   // gauge
   const lo = Math.min(buyStrike,sellStrike) - width/(PT*lots)*0.4 - 50;
@@ -875,20 +884,29 @@ function calcOptSingle(){
   const openFee = optFee*1*lots;
   const openTax = premAmt*0.001;
   let totalCost = openFee + openTax;
-  let costNote = `開倉成本：手續費 1 腳 × ${fmt0(optFee)} 元 × ${lots} 口 = ${fmt0(openFee)} 元；期交稅（權利金×0.1%）= ${fmt0(openTax)} 元。`;
+  let costNote =
+    `【開倉】<br>` +
+    `・手續費：1 腳 × ${fmt0(optFee)} 元 × ${lots} 口 = ${fmt0(openFee)} 元<br>` +
+    `・期交稅：權利金(${fmt(prem)}點) × 契約乘數(50) × 0.1% = ${fmt0(openTax)} 元`;
 
   if(closeMode === 'close'){
     const closeFee = optFee*1*lots;
     const closeTax = premAmt*0.001;
     totalCost += closeFee + closeTax;
-    costNote += ` 因提前平倉，另計平倉手續費 ${fmt0(closeFee)} 元＋平倉期交稅（此處先以開倉權利金金額概估 ${fmt0(closeTax)} 元，實際請以平倉當下報價覆核）。`;
+    costNote +=
+      `<br><br>【提前平倉】（跟開倉一樣，再收一次）<br>` +
+      `・手續費：1 腳 × ${fmt0(optFee)} 元 × ${lots} 口 = ${fmt0(closeFee)} 元<br>` +
+      `・期交稅（稅率 0.1%）：權利金 × 契約乘數(50) × 0.1% ≈ ${fmt0(closeTax)} 元（此處先以開倉權利金金額概估，實際請以平倉當下報價覆核）`;
   } else if(closeMode === 'hold_itm'){
     const settleFee = optFee*1*lots; // 參與結算手續費比照原下單管道費率，跟開倉同一個費率，不是免費也不是雙倍
     const settleTax = strike*PT*lots*0.00002; // 期交稅＝結算價×契約乘數×0.00002，此處以履約價概估結算價
     totalCost += settleFee + settleTax;
-    costNote += ` 因留倉到結算且為價內履約（參與結算），另計結算手續費 ${fmt0(settleFee)} 元（比照原下單管道費率，跟開倉一樣）＋結算期交稅（結算價×契約乘數×0.00002，此處以履約價概估 ${fmt0(settleTax)} 元，實際請以台灣期交所公告之結算價計算）。`;
+    costNote +=
+      `<br><br>【留倉到結算・價內履約，參與結算】<br>` +
+      `・手續費：1 腳 × ${fmt0(optFee)} 元 × ${lots} 口 = ${fmt0(settleFee)} 元（比照開倉費率，不是免費也不是雙倍）<br>` +
+      `・期交稅（稅率只有 0.002%，跟平倉的 0.1% 不一樣）：結算價(以履約價${fmt(strike)}點概估) × 契約乘數(50) × 0.002% ≈ ${fmt0(settleTax)} 元（實際請以台灣期交所公告之結算價計算）`;
   } else {
-    costNote += ` 留倉到結算且為價外（歸零）：不參與結算，不收手續費、免期交稅。`;
+    costNote += `<br><br>【留倉到結算・價外，歸零】<br>・不參與結算：不收手續費、不課期交稅`;
   }
 
   const notional = strike*PT*lots;
@@ -926,7 +944,7 @@ function calcOptSingle(){
   document.getElementById('o_maxprofit').className = 'v pos';
   document.getElementById('o_maxloss').textContent = maxLoss===Infinity ? '無上限' : fmt0(Math.max(maxLoss,0))+' 元';
   document.getElementById('o_maxloss').className = 'v neg';
-  document.getElementById('o_costnote').textContent = costNote;
+  document.getElementById('o_costnote').innerHTML = costNote;
 
   // gauge
   const range = Math.max(Math.abs(bep-strike), strike*0.02)*2.4 + 1;
