@@ -1,0 +1,15 @@
+{
+  "name": "當沖／期貨／選擇權 損益試算機（手續費自訂版）",
+  "short_name": "損益試算機(自訂)",
+  "description": "台股當沖、台指期貨、選擇權價差損益試算工具，手續費折數／每口手續費可自行填寫",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f2ee",
+  "theme_color": "#d1382a",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
