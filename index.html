@@ -69,6 +69,7 @@
   .field{flex:1; min-width:120px;}
   .field label{display:block; font-size:12px; color:var(--text-dim); margin-bottom:6px;}
   .leg-row label{min-height:34px; line-height:1.4;}
+  .leg-suffix{font-size:10px; color:var(--text-faint); font-weight:500;}
   .field input, .field select{
     width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text);
     padding:9px 10px; border-radius:7px; font-family:var(--mono); font-size:16px; font-weight:600;
@@ -644,9 +645,9 @@ function calcOpt(){
 
   const isCall = (strategy==='bullcall' || strategy==='bearcall');
   const isCredit = (strategy==='bullput' || strategy==='bearcall');
-  const legSuffix = isCredit ? ['　－保護腳', '　－收權利金腳'] : ['　－主要部位腳', '　－降低成本腳'];
-  document.getElementById('o_buy_label').textContent = (isCall ? '買進買權履約價 (Call)' : '買進賣權履約價 (Put)') + legSuffix[0];
-  document.getElementById('o_sell_label').textContent = (isCall ? '賣出買權履約價 (Call)' : '賣出賣權履約價 (Put)') + legSuffix[1];
+  const legSuffix = isCredit ? ['保護腳', '收權利金腳'] : ['主要部位腳', '降低成本腳'];
+  document.getElementById('o_buy_label').innerHTML = (isCall ? '買進買權履約價 (Call)' : '買進賣權履約價 (Put)') + '<br><span class="leg-suffix">' + legSuffix[0] + '</span>';
+  document.getElementById('o_sell_label').innerHTML = (isCall ? '賣出買權履約價 (Call)' : '賣出賣權履約價 (Put)') + '<br><span class="leg-suffix">' + legSuffix[1] + '</span>';
 
   const PT = 50; // TXO 每點金額
   const buyPremAmt = buyPrem*PT*lots;
