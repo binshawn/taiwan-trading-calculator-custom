@@ -202,7 +202,7 @@
 
     <div class="card">
       <h2>賣出價位上下五檔試算表</h2>
-      <div class="table-scroll" style="min-height:340px;"><table>
+      <div class="table-scroll" style="min-height:390px;"><table>
         <thead><tr><th>賣出價</th><th>距買價</th><th>賣出淨值</th><th>損益（元）</th><th>報酬率</th><th>備註</th></tr></thead>
         <tbody id="s_table"></tbody>
       </table></div>
@@ -520,17 +520,16 @@ function calcStock(){
   document.getElementById('s_marker').style.left = bePct+'%';
   document.getElementById('s_marker').setAttribute('data-label', '損平 '+fmt(bePrice));
 
-  // build price ladder: down 3 ticks, buy, up N+3 ticks, insert breakeven row
+  // build price ladder: 固定上下各 5 檔（列數固定，不隨股價變動，避免表格高度跳動）
   let rows = [];
   // down steps
   let downs = [];
   let dcur = price;
-  for(let i=0;i<3;i++){ dcur = dcur - tickDown(dcur); downs.unshift(roundTo(dcur,2)); }
+  for(let i=0;i<5;i++){ dcur = dcur - tickDown(dcur); downs.unshift(roundTo(dcur,2)); }
   rows.push(...downs.map(p=>({price:p, tag:''})));
   rows.push({price: roundTo(price,2), tag:'buy'});
   let ucur = price;
-  const upCount = Math.max(n+3, 5);
-  for(let i=0;i<upCount;i++){
+  for(let i=0;i<5;i++){
     ucur = ucur + tickUp(ucur);
     rows.push({price: roundTo(ucur,2), tag:''});
   }
