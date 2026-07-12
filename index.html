@@ -522,16 +522,14 @@ function calcStock(){
     ucur = ucur + tickUp(ucur);
     rows.push({price: roundTo(ucur,2), tag:''});
   }
-  // insert breakeven row if not close to an existing row
-  const beRounded = roundTo(bePrice,2);
-  let merged = false;
-  rows = rows.map(r=>{
-    if(Math.abs(r.price - beRounded) < (tick*0.4)){ merged = true; return {...r, tag: r.tag==='buy'?'buy':'be'}; }
-    return r;
-  });
-  if(!merged){
-    rows.push({price: beRounded, tag:'be'});
-    rows.sort((a,b)=>a.price-b.price);
+  // 標記上下五檔裡「第一個真正淨利 > 0」的檔位，不再另外插入不一定卡得到的理論損平價
+  const tagBuyFee = price*1000*lots*FEE_RATE;
+  for(const r of rows){
+    if(r.tag==='buy') continue;
+    const sellFee = r.price*1000*lots*FEE_RATE;
+    const tax = r.price*1000*lots*TAX_RATE;
+    const pnl = (r.price-price)*1000*lots - tagBuyFee - sellFee - tax;
+    if(pnl > 0){ r.tag = 'profit'; break; }
   }
 
   const buyCostPrincipal = price*1000*lots;
@@ -548,8 +546,8 @@ function calcStock(){
     const pnlClass = pnl>=0 ? 'pos':'neg';
     let note = '';
     if(r.tag==='buy') note = '← 買進價';
-    if(r.tag==='be') note = '✅ 損平點';
-    const rowClass = r.tag==='buy' ? 'buyrow' : (r.tag==='be' ? 'evrow':'');
+    if(r.tag==='profit') note = '🎯 獲利點';
+    const rowClass = r.tag==='buy' ? 'buyrow' : (r.tag==='profit' ? 'evrow':'');
     html += `<tr class="${rowClass}">
       <td>${fmt(sellPx)}</td>
       <td>${dist>=0?'+':''}${fmt(dist)}</td>
