@@ -581,8 +581,9 @@ function calcOpt(){
 
   const isCall = (strategy==='bullcall' || strategy==='bearcall');
   const isCredit = (strategy==='bullput' || strategy==='bearcall');
-  document.getElementById('o_buy_label').textContent = (isCall ? '買進買權履約價 (Call)' : '買進賣權履約價 (Put)') + (isCredit ? '　－保護腳' : '');
-  document.getElementById('o_sell_label').textContent = (isCall ? '賣出買權履約價 (Call)' : '賣出賣權履約價 (Put)') + (isCredit ? '　－收權利金腳' : '');
+  const legSuffix = isCredit ? ['　－保護腳', '　－收權利金腳'] : ['　－主要部位腳', '　－降低成本腳'];
+  document.getElementById('o_buy_label').textContent = (isCall ? '買進買權履約價 (Call)' : '買進賣權履約價 (Put)') + legSuffix[0];
+  document.getElementById('o_sell_label').textContent = (isCall ? '賣出買權履約價 (Call)' : '賣出賣權履約價 (Put)') + legSuffix[1];
 
   const PT = 50; // TXO 每點金額
   const buyPremAmt = buyPrem*PT*lots;
