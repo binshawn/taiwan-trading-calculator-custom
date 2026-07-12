@@ -112,8 +112,10 @@
   .note-cell{font-size:11px; color:var(--amber); font-weight:700;}
 
   .stat-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px; margin-top:6px;}
-  .stat.wide{grid-column:1 / -1;}
+  .stat-grid.single-row{display:flex; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;}
   .stat{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:12px;}
+  .stat-grid.single-row .stat{flex:1 1 130px; min-width:130px;}
+  .stat-grid.single-row .stat.wide{flex:2 1 380px; min-width:380px;}
   .stat .k{font-size:11px; color:var(--text-faint); margin-bottom:4px; min-height:28px;}
   .stat .v{font-family:var(--mono); font-size:17px; font-weight:700; white-space:nowrap;}
 
@@ -459,7 +461,7 @@
         <div class="tape-marker" id="o_marker2" data-label="" style="display:none;"></div>
       </div>
       <div class="tape-labels"><span>← 最大虧損（綠）</span><span>最大獲利（紅）→</span></div>
-      <div class="stat-grid">
+      <div class="stat-grid single-row">
         <div class="stat" id="o_netdebit_stat"><div class="k">淨權利金</div><div class="v" id="o_netdebit">—</div></div>
         <div class="stat" id="o_bep_stat"><div class="k">損益兩平點</div><div class="v" id="o_bep">—</div></div>
         <div class="stat"><div class="k">最大獲利</div><div class="v" id="o_maxprofit">—</div></div>
