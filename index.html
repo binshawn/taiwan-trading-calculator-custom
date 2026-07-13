@@ -177,7 +177,16 @@
       <h2>輸入條件</h2>
       <div class="row">
         <div class="field">
-          <label>買進股價（元）</label>
+          <label>方向</label>
+          <div class="seg" id="s_dir">
+            <button class="on" data-v="1">做多（先買後賣）</button>
+            <button data-v="-1">做空（先賣後買）</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label id="s_price_label">買進股價（元）</label>
           <input type="number" id="s_price" step="0.01">
         </div>
         <div class="field">
@@ -222,7 +231,7 @@
       </div>
       <div class="row">
         <div class="field" id="s_exit_field_price">
-          <label>出場價格（元）</label>
+          <label id="s_exit_label">出場價格（元）</label>
           <input type="number" id="s_exit_price" step="0.01">
         </div>
         <div class="field" id="s_exit_field_pct" style="display:none;">
@@ -238,12 +247,12 @@
     </div>
 
     <div class="card">
-      <h2>賣出價位上下五檔試算表</h2>
+      <h2 id="s_ladder_title">賣出價位上下五檔試算表</h2>
       <div class="table-scroll" style="min-height:390px;"><table>
-        <thead><tr><th>賣出價</th><th>距買價</th><th>賣出淨值</th><th>損益（元）</th><th>報酬率</th><th>備註</th></tr></thead>
+        <thead><tr><th id="s_col_price">賣出價</th><th>距進場價</th><th id="s_col_net">賣出淨值</th><th>損益（元）</th><th>報酬率</th><th>備註</th></tr></thead>
         <tbody id="s_table"></tbody>
       </table></div>
-      <div class="foot-note">報酬率＝損益 ÷（買進股價×1000×張數）。賣出淨值＝賣出金額 － 賣出手續費 － 當沖證交稅。若券商設有最低手續費下限，實際損平點會略高，請自行核對。</div>
+      <div class="foot-note" id="s_ladder_note">報酬率＝損益 ÷（買進股價×1000×張數）。賣出淨值＝賣出金額 － 賣出手續費 － 當沖證交稅。若券商設有最低手續費下限，實際損平點會略高，請自行核對。</div>
     </div>
   </div>
 
@@ -623,25 +632,37 @@ const BASE_FEE_RATE = 0.001425; // 券商牌告手續費率（未打折前）
 const TAX_RATE = 0.0015; // 當沖證交稅（法定，不受券商折數影響）
 
 function calcStock(){
-  const price = parseFloat(document.getElementById('s_price').value) || 0;
+  const dir = parseInt(document.querySelector('#s_dir .on').dataset.v); // 1=做多(先買後賣) -1=做空(先賣後買)
+  const price = parseFloat(document.getElementById('s_price').value) || 0; // 進場價：做多是買進價，做空是賣出(放空)價
   const lots = parseFloat(document.getElementById('s_lots').value) || 1;
   const discount = parseFloat(document.getElementById('s_discount').value) || 10;
   if(price<=0){ return; }
 
   const FEE_RATE = BASE_FEE_RATE * (discount/10);
   const COST_RATE = FEE_RATE*2 + TAX_RATE;
-  document.getElementById('s_costnote').innerHTML =
-    `費率假設：手續費 0.1425%×${fmt(discount)}折＝${(FEE_RATE*100).toFixed(5)}%（買賣雙邊）；當沖證交稅 0.15%（賣出時課徵）。總成本率 ≈ <b>${(COST_RATE*100).toFixed(5)}%</b>，尚未設最低手續費下限。`;
+  document.getElementById('s_costnote').innerHTML = dir===1
+    ? `費率假設：手續費 0.1425%×${fmt(discount)}折＝${(FEE_RATE*100).toFixed(5)}%（買賣雙邊）；當沖證交稅 0.15%（賣出時課徵）。總成本率 ≈ <b>${(COST_RATE*100).toFixed(5)}%</b>，尚未設最低手續費下限。`
+    : `費率假設：手續費 0.1425%×${fmt(discount)}折＝${(FEE_RATE*100).toFixed(5)}%（買賣雙邊）；當沖證交稅 0.15%（一律在「賣出」那一腳課徵，做空是先賣出的那一筆，不是回補那一筆）。總成本率 ≈ <b>${(COST_RATE*100).toFixed(5)}%</b>，尚未設最低手續費下限。做空當沖僅限券商公告可先賣後買的個股，請自行確認資格。`;
+
+  document.getElementById('s_price_label').textContent = dir===1 ? '買進股價（元）' : '賣出（放空）股價（元）';
+  document.getElementById('s_exit_label').textContent = dir===1 ? '出場價格（賣出，元）' : '出場價格（回補，元）';
+  document.getElementById('s_ladder_title').textContent = dir===1 ? '賣出價位上下五檔試算表' : '回補價位上下五檔試算表';
+  document.getElementById('s_col_price').textContent = dir===1 ? '賣出價' : '回補價';
+  document.getElementById('s_col_net').textContent = dir===1 ? '賣出淨值' : '回補成本';
+  document.getElementById('s_ladder_note').textContent = dir===1
+    ? '報酬率＝損益 ÷（買進股價×1000×張數）。賣出淨值＝賣出金額－賣出手續費－當沖證交稅。若券商設有最低手續費下限，實際損平點會略高，請自行核對。'
+    : '報酬率＝損益 ÷（賣出（放空）股價×1000×張數）。回補成本＝回補金額＋回補手續費（證交稅已在放空賣出當下課徵過，回補不再課稅）。若券商設有最低手續費下限，實際損平點會略高，請自行核對。';
 
   const tick = tickAt(price);
   const beMove = price * COST_RATE;
-  const bePrice = price + beMove;
+  const bePrice = dir===1 ? price + beMove : price - beMove;
 
-  // 至少要跳幾檔
+  // 至少要跳幾檔才獲利
   let cur = price, n = 0;
-  while(cur < bePrice - 1e-9 && n < 500){
-    cur = cur + tickUp(cur);
-    n++;
+  if(dir===1){
+    while(cur < bePrice - 1e-9 && n < 500){ cur = cur + tickUp(cur); n++; }
+  } else {
+    while(cur > bePrice + 1e-9 && n < 500){ cur = cur - tickDown(cur); n++; }
   }
 
   document.getElementById('s_bepx').textContent = fmt(bePrice) + ' 元';
@@ -653,14 +674,18 @@ function calcStock(){
   let exitPx;
   if(exitMode==='pct'){
     const targetPct = (parseFloat(document.getElementById('s_exit_pct').value)||0)/100;
-    exitPx = price*(targetPct + 1 + FEE_RATE)/(1 - FEE_RATE - TAX_RATE);
+    exitPx = dir===1
+      ? price*(targetPct + 1 + FEE_RATE)/(1 - FEE_RATE - TAX_RATE)
+      : price*(1 - FEE_RATE - TAX_RATE - targetPct)/(1 + FEE_RATE);
   } else {
     exitPx = parseFloat(document.getElementById('s_exit_price').value)||0;
   }
-  const exitBuyFee = price*1000*lots*FEE_RATE;
-  const exitSellFee = exitPx*1000*lots*FEE_RATE;
-  const exitTax = exitPx*1000*lots*TAX_RATE;
-  const exitPnl = (exitPx-price)*1000*lots - exitBuyFee - exitSellFee - exitTax;
+  // 手續費雙邊都收；證交稅只收一次，固定收在「賣出」那一腳（做多是出場那一筆，做空是進場那一筆）
+  const exitFeeEntry = price*1000*lots*FEE_RATE;
+  const exitFeeExit = exitPx*1000*lots*FEE_RATE;
+  const exitSellNotional = dir===1 ? exitPx*1000*lots : price*1000*lots;
+  const exitTax = exitSellNotional*TAX_RATE;
+  const exitPnl = (exitPx-price)*1000*lots*dir - exitFeeEntry - exitFeeExit - exitTax;
   const exitRetPct = price>0 ? exitPnl/(price*1000*lots) : 0;
   document.getElementById('s_exit_calcpx').textContent = fmt(exitPx) + ' 元';
   document.getElementById('s_exit_pnl').textContent = (exitPnl>=0?'+':'') + fmt0(exitPnl) + ' 元';
@@ -668,9 +693,9 @@ function calcStock(){
   document.getElementById('s_exit_ret').textContent = pctFmt(exitRetPct);
   document.getElementById('s_exit_ret').className = 'v ' + (exitRetPct>=0?'pos':'neg');
 
-  // tape gauge: map -3 ticks .. bePrice+3 ticks range, 0 = buy price left-ish
-  const rangeLow = price - 4*tick;
-  const rangeHigh = bePrice + 3*tick;
+  // tape gauge: 做多是「損平在進場價之上」，做空是「損平在進場價之下」
+  const rangeLow = dir===1 ? price - 4*tick : bePrice - 3*tick;
+  const rangeHigh = dir===1 ? bePrice + 3*tick : price + 4*tick;
   const span = rangeHigh - rangeLow;
   const buyPct = ((price - rangeLow)/span)*100;
   const bePct = ((bePrice - rangeLow)/span)*100;
@@ -680,32 +705,36 @@ function calcStock(){
   document.getElementById('s_marker').setAttribute('data-label', '損平 '+fmt(bePrice));
 
   // build price ladder: 固定上下各 5 檔（列數固定，不隨股價變動，避免表格高度跳動）
-  let rows = [];
-  // down steps
   let downs = [];
   let dcur = price;
-  for(let i=0;i<5;i++){ dcur = dcur - tickDown(dcur); downs.unshift(roundTo(dcur,2)); }
+  for(let i=0;i<5;i++){ dcur = dcur - tickDown(dcur); downs.unshift(roundTo(dcur,2)); } // downs[0]=最遠…downs[4]=最近
+  let ups = [];
+  let ucur = price;
+  for(let i=0;i<5;i++){ ucur = ucur + tickUp(ucur); ups.push(roundTo(ucur,2)); } // ups[0]=最近…ups[4]=最遠
+
+  let rows = [];
   rows.push(...downs.map(p=>({price:p, tag:''})));
   rows.push({price: roundTo(price,2), tag:'buy'});
-  let ucur = price;
-  for(let i=0;i<5;i++){
-    ucur = ucur + tickUp(ucur);
-    rows.push({price: roundTo(ucur,2), tag:''});
-  }
+  rows.push(...ups.map(p=>({price:p, tag:''})));
   // 使用者自己輸入的出場價，不一定卡在整數檔位上，獨立加一列在最下面
   if(exitPx > 0){ rows.push({price: roundTo(exitPx,2), tag:'exit'}); }
-  // 標記上下五檔裡「第一個真正淨利 > 0」的檔位，不再另外插入不一定卡得到的理論損平價
-  const tagBuyFee = price*1000*lots*FEE_RATE;
-  for(const r of rows){
-    if(r.tag==='buy' || r.tag==='exit') continue;
-    const sellFee = r.price*1000*lots*FEE_RATE;
-    const tax = r.price*1000*lots*TAX_RATE;
-    const pnl = (r.price-price)*1000*lots - tagBuyFee - sellFee - tax;
-    if(pnl > 0){ r.tag = 'profit'; break; }
+
+  // 標記「第一個真正淨利 > 0」的檔位：做多找上五檔（由近到遠），做空找下五檔（由近到遠）
+  const tagEntryFee = price*1000*lots*FEE_RATE;
+  function pnlAt(p){
+    const otherFee = p*1000*lots*FEE_RATE;
+    const sellNotional = dir===1 ? p*1000*lots : price*1000*lots;
+    const tax = sellNotional*TAX_RATE;
+    return (p-price)*1000*lots*dir - tagEntryFee - otherFee - tax;
+  }
+  if(dir===1){
+    for(let i=6; i<=10; i++){ if(pnlAt(rows[i].price) > 0){ rows[i].tag='profit'; break; } }
+  } else {
+    for(let i=4; i>=0; i--){ if(pnlAt(rows[i].price) > 0){ rows[i].tag='profit'; break; } }
   }
 
   // 更新既有的 <tr>／<td> 文字內容，不重建整個表格 DOM，避免手機瀏覽器因大範圍 DOM 重建而重新捲動版面
-  const buyCostPrincipal = price*1000*lots;
+  const entryNotional = price*1000*lots;
   const tbody = document.getElementById('s_table');
   if(tbody.children.length !== rows.length){
     let skeleton = '';
@@ -713,26 +742,26 @@ function calcStock(){
     tbody.innerHTML = skeleton;
   }
   rows.forEach((r,i)=>{
-    const sellPx = r.price;
-    const buyFee = price*1000*lots*FEE_RATE;
-    const sellFee = sellPx*1000*lots*FEE_RATE;
-    const tax = sellPx*1000*lots*TAX_RATE;
-    const pnl = (sellPx-price)*1000*lots - buyFee - sellFee - tax;
-    const netProceeds = sellPx*1000*lots - sellFee - tax;
-    const dist = sellPx - price;
-    const retPct = pnl/buyCostPrincipal;
+    const p = r.price;
+    const otherFee = p*1000*lots*FEE_RATE;
+    const sellNotional = dir===1 ? p*1000*lots : price*1000*lots;
+    const tax = sellNotional*TAX_RATE;
+    const pnl = (p-price)*1000*lots*dir - tagEntryFee - otherFee - tax;
+    const netAmt = dir===1 ? (p*1000*lots - otherFee - tax) : (p*1000*lots + otherFee); // 做多=賣出淨值；做空=回補成本
+    const dist = p - price;
+    const retPct = pnl/entryNotional;
     const pnlClass = pnl>=0 ? 'pos':'neg';
     let note = '';
-    if(r.tag==='buy') note = '← 買進價';
+    if(r.tag==='buy') note = '← 進場價';
     if(r.tag==='profit') note = '🎯 獲利點';
     if(r.tag==='exit') note = '⭐ 你的出場價';
     const rowClass = r.tag==='buy' ? 'buyrow' : (r.tag==='profit' ? 'evrow' : (r.tag==='exit' ? 'exitrow' : ''));
     const tr = tbody.children[i];
     tr.className = rowClass;
     const c = tr.children;
-    c[0].textContent = fmt(sellPx);
+    c[0].textContent = fmt(p);
     c[1].textContent = (dist>=0?'+':'')+fmt(dist);
-    c[2].textContent = fmt0(netProceeds);
+    c[2].textContent = fmt0(netAmt);
     c[3].textContent = (pnl>=0?'+':'')+fmt0(pnl);
     c[3].className = pnlClass;
     c[4].textContent = pctFmt(retPct);
