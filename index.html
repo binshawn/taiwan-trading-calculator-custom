@@ -380,6 +380,8 @@
         <button data-v="shortstraddle">賣出跨式<span class="strat-en">Short Straddle</span></button>
         <button data-v="longstrangle">買進勒式<span class="strat-en">Long Strangle</span></button>
         <button data-v="shortstrangle">賣出勒式<span class="strat-en">Short Strangle</span></button>
+        <button data-v="ironcondor">鐵禿鷹<span class="strat-en">Iron Condor</span></button>
+        <button data-v="ironbutterfly">鐵蝴蝶<span class="strat-en">Iron Butterfly</span></button>
       </div>
     </div>
 
@@ -435,6 +437,64 @@
         </div>
       </div>
       <div class="foot-note">價差策略（Bull Call／Bear Put／Bull Put／Bear Call）：「買進」＝支付權利金的那一腳；「賣出」＝收取權利金的那一腳。跨式／勒式（Straddle／Strangle）：上面兩個欄位改成「買權(Call)腳」跟「賣權(Put)腳」，買進跨勒式兩腳都是買進、賣出跨勒式兩腳都是賣出；跨式請把兩腳履約價填一樣，勒式填不同履約價（Call通常較高、Put通常較低）。</div>
+    </div>
+
+    <div class="card" id="o_legs_iron_card" style="display:none;">
+      <h2>四腳部位</h2>
+      <div class="row leg-row">
+        <div class="field">
+          <label>買進賣權履約價（Put，保護腳）</label>
+          <input type="number" id="o_ic_putbuy_strike" step="50">
+        </div>
+        <div class="field">
+          <label>買進權利金（點）</label>
+          <input type="number" id="o_ic_putbuy_prem" step="1">
+        </div>
+      </div>
+      <div class="row leg-row">
+        <div class="field">
+          <label>賣出賣權履約價（Put，收租金腳）</label>
+          <input type="number" id="o_ic_putsell_strike" step="50">
+        </div>
+        <div class="field">
+          <label>賣出權利金（點）</label>
+          <input type="number" id="o_ic_putsell_prem" step="1">
+        </div>
+      </div>
+      <div class="row leg-row">
+        <div class="field">
+          <label>賣出買權履約價（Call，收租金腳）</label>
+          <input type="number" id="o_ic_callsell_strike" step="50">
+        </div>
+        <div class="field">
+          <label>賣出權利金（點）</label>
+          <input type="number" id="o_ic_callsell_prem" step="1">
+        </div>
+      </div>
+      <div class="row leg-row">
+        <div class="field">
+          <label>買進買權履約價（Call，保護腳）</label>
+          <input type="number" id="o_ic_callbuy_strike" step="50">
+        </div>
+        <div class="field">
+          <label>買進權利金（點）</label>
+          <input type="number" id="o_ic_callbuy_prem" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>口數（組）</label>
+          <input type="number" id="o_ic_lots" step="1" min="1">
+        </div>
+        <div class="field">
+          <label>是否會提前平倉？</label>
+          <div class="seg" id="o_ic_close">
+            <button class="on" data-v="hold">留倉到結算</button>
+            <button data-v="close">會提前平倉</button>
+          </div>
+        </div>
+      </div>
+      <div class="foot-note">手續費沿用上方「每口每邊手續費」設定。鐵禿鷹（Iron Condor）：4 個履約價由低到高依序是「買進Put保護腳 ＜ 賣出Put收租腳 ＜ 賣出Call收租腳 ＜ 買進Call保護腳」。鐵蝴蝶（Iron Butterfly）：「賣出Put收租腳」跟「賣出Call收租腳」填一樣的履約價（通常是價平），填其中一個會自動同步到另一個。這兩個策略一定是收取淨權利金（賣方策略），風險與獲利都有限。</div>
     </div>
 
     <div class="card" id="o_legs_single_card" style="display:none;">
@@ -516,6 +576,14 @@
         </table></div>
         <div class="foot-note">A值/B值/C值取自每日自動更新的台灣期交所公告（原始保證金層級）。深度價外（500點以上）依規定會加成 A/B 值 20%～50%，此工具已納入計算。實際核准金額仍以下單當下期貨商系統為準。</div>
       </div>
+      <div id="o_margin_iron_note" style="display:none;">
+        <div class="callout">鐵禿鷹／鐵蝴蝶保證金＝<b>賣權價差保證金 ＋ 買權價差保證金</b>，各自為「履約價差 × 契約乘數(50)」。查證過台灣期交所的正式保證金分類（單一部位／價差部位／跨勒式混合部位／期權混合部位），並沒有「兩組價差合併計算取較大值」這種規則，下單時通常會被券商系統視為兩張獨立的價差委託單，保證金分別收取、相加計算。</div>
+        <div class="stat-grid">
+          <div class="stat"><div class="k">賣權價差保證金</div><div class="v" id="o_ic_put_margin">—</div></div>
+          <div class="stat"><div class="k">買權價差保證金</div><div class="v" id="o_ic_call_margin">—</div></div>
+          <div class="stat"><div class="k">保證金合計</div><div class="v" id="o_ic_total_margin">—</div></div>
+        </div>
+      </div>
       <div class="foot-note">前提是兩腳有被券商系統辨識為合法組合單；如果分開下單、或不同到期月，賣出那一腳會被當作裸空計收保證金，改用金額高很多的 A值/B值 公式（可切到「單腳策略」查看）。實際核准與金額仍以下單當下期貨商系統及台灣期交所公告為準。</div>
     </div>
 
@@ -589,17 +657,26 @@ document.querySelectorAll('.seg').forEach(seg=>{
       const isSingle = btn.dataset.v === 'single';
       document.getElementById('o_strategy_spread_card').style.display = isSingle ? 'none' : '';
       document.getElementById('o_strategy_single_card').style.display = isSingle ? '' : 'none';
-      document.getElementById('o_legs_spread_card').style.display = isSingle ? 'none' : '';
-      document.getElementById('o_legs_single_card').style.display = isSingle ? '' : 'none';
       document.getElementById('o_margin_card').style.display = isSingle ? 'none' : '';
       document.getElementById('o_margin_single_card').style.display = isSingle ? '' : 'none';
+      updateOptLegsVisibility();
     }
-    if(seg.id === 'o_strategy' && STRADDLE_STRATS.includes(btn.dataset.v)){
-      // 跨式兩腳履約價本來就該一樣，切過來時先幫忙同步一次，避免殘留勒式時填的不同履約價
-      const buyStrikeEl = document.getElementById('o_buy_strike');
-      const sellStrikeEl = document.getElementById('o_sell_strike');
-      sellStrikeEl.value = buyStrikeEl.value;
-      persistInput(sellStrikeEl);
+    if(seg.id === 'o_strategy'){
+      updateOptLegsVisibility();
+      if(STRADDLE_STRATS.includes(btn.dataset.v)){
+        // 跨式兩腳履約價本來就該一樣，切過來時先幫忙同步一次，避免殘留勒式時填的不同履約價
+        const buyStrikeEl = document.getElementById('o_buy_strike');
+        const sellStrikeEl = document.getElementById('o_sell_strike');
+        sellStrikeEl.value = buyStrikeEl.value;
+        persistInput(sellStrikeEl);
+      }
+      if(btn.dataset.v === 'ironbutterfly'){
+        // 鐵蝴蝶的兩個賣出履約價本來就該一樣（通常是價平），切過來時先幫忙同步一次
+        const putSellEl = document.getElementById('o_ic_putsell_strike');
+        const callSellEl = document.getElementById('o_ic_callsell_strike');
+        callSellEl.value = putSellEl.value;
+        persistInput(callSellEl);
+      }
     }
     recalcAll();
   });
@@ -843,11 +920,27 @@ function calcFut(){
 // ---------- 台指選擇權 ----------
 function calcOpt(){
   const mode = document.querySelector('#o_mode .on').dataset.v;
-  if(mode === 'single') calcOptSingle(); else calcOptSpread();
+  if(mode === 'single'){ calcOptSingle(); return; }
+  const strategy = document.querySelector('#o_strategy .on').dataset.v;
+  if(IRON_STRATS.includes(strategy)){ calcIronCondor(); return; }
+  calcOptSpread();
+}
+function updateOptLegsVisibility(){
+  const mode = document.querySelector('#o_mode .on').dataset.v;
+  if(mode === 'single'){
+    document.getElementById('o_legs_spread_card').style.display = 'none';
+    document.getElementById('o_legs_iron_card').style.display = 'none';
+    return;
+  }
+  const strategy = document.querySelector('#o_strategy .on').dataset.v;
+  const isIron = IRON_STRATS.includes(strategy);
+  document.getElementById('o_legs_spread_card').style.display = isIron ? 'none' : '';
+  document.getElementById('o_legs_iron_card').style.display = isIron ? '' : 'none';
 }
 
 const COMBO_STRATS = ['longstraddle','shortstraddle','longstrangle','shortstrangle'];
 const STRADDLE_STRATS = ['longstraddle','shortstraddle'];
+const IRON_STRATS = ['ironcondor','ironbutterfly'];
 function otmSurcharge(otmPoints){
   if(otmPoints >= 1000) return 1.5;
   if(otmPoints >= 500) return 1.2;
@@ -1013,6 +1106,7 @@ function calcOptSpread(){
   document.getElementById('o_margin_combo_long_note').style.display = (isCombo && isComboLong) ? '' : 'none';
   document.getElementById('o_margin_combo_short_note').style.display = (isCombo && !isComboLong) ? '' : 'none';
   document.getElementById('o_margin_c_updated').style.display = (isCombo && !isComboLong) ? '' : 'none';
+  document.getElementById('o_margin_iron_note').style.display = 'none';
 
   if(isCombo && !isComboLong){
     if(!MARGIN_DATA){
@@ -1044,6 +1138,106 @@ function calcOptSpread(){
       document.getElementById('o_margin_c_updated').textContent = MARGIN_DATA.updated+' 更新';
     }
   }
+}
+
+function calcIronCondor(){
+  const strategy = document.querySelector('#o_strategy .on').dataset.v; // ironcondor / ironbutterfly
+  const willClose = document.querySelector('#o_ic_close .on').dataset.v === 'close';
+  const optFee = parseFloat(document.getElementById('o_fee').value)||0;
+  const putBuyStrike = parseFloat(document.getElementById('o_ic_putbuy_strike').value)||0;
+  const putBuyPrem = parseFloat(document.getElementById('o_ic_putbuy_prem').value)||0;
+  const putSellStrike = parseFloat(document.getElementById('o_ic_putsell_strike').value)||0;
+  const putSellPrem = parseFloat(document.getElementById('o_ic_putsell_prem').value)||0;
+  const callSellStrike = parseFloat(document.getElementById('o_ic_callsell_strike').value)||0;
+  const callSellPrem = parseFloat(document.getElementById('o_ic_callsell_prem').value)||0;
+  const callBuyStrike = parseFloat(document.getElementById('o_ic_callbuy_strike').value)||0;
+  const callBuyPrem = parseFloat(document.getElementById('o_ic_callbuy_prem').value)||0;
+  const lots = parseFloat(document.getElementById('o_ic_lots').value)||1;
+
+  const PT = 50; // TXO 每點金額
+  const putBuyAmt = putBuyPrem*PT*lots;
+  const putSellAmt = putSellPrem*PT*lots;
+  const callSellAmt = callSellPrem*PT*lots;
+  const callBuyAmt = callBuyPrem*PT*lots;
+  const totalPremAmt = putBuyAmt + putSellAmt + callSellAmt + callBuyAmt;
+
+  // 淨收入 = 收到的權利金（賣權賣出腳＋買權賣出腳）－ 付出的權利金（賣權買進腳＋買權買進腳），永遠是賣方策略
+  const rawNetCredit = (putSellAmt + callSellAmt) - (putBuyAmt + callBuyAmt);
+
+  // 開倉成本：4 腳都收手續費；期交稅課在四腳權利金合計上
+  const openFee = optFee*4*lots;
+  const openTax = totalPremAmt*0.001;
+  let totalCost = openFee + openTax;
+  let costNote =
+    `【開倉】<br>` +
+    `・手續費：4 腳 × ${fmt0(optFee)} 元 × ${lots} 組 = ${fmt0(openFee)} 元<br>` +
+    `・期交稅：四腳權利金合計 × 0.1% = ${fmt0(openTax)} 元`;
+
+  if(willClose){
+    const closeFee = optFee*4*lots;
+    const closeTax = totalPremAmt*0.001;
+    totalCost += closeFee + closeTax;
+    costNote +=
+      `<br><br>【提前平倉】（跟開倉一樣，再收一次）<br>` +
+      `・手續費：4 腳 × ${fmt0(optFee)} 元 × ${lots} 組 = ${fmt0(closeFee)} 元<br>` +
+      `・期交稅（稅率 0.1%）：四腳權利金合計 × 0.1% ≈ ${fmt0(closeTax)} 元（此處先以開倉權利金金額概估，實際請以平倉當下報價覆核）`;
+  } else {
+    costNote +=
+      `<br><br>【留倉到結算】<br>` +
+      `・假設四腳都價外歸零：不收手續費、不課期交稅<br>` +
+      `・若有一腳（或多腳）價內履約：該腳另計結算手續費（比照開倉費率）＋結算期交稅（稅率只有 0.002%，用「結算價 × 契約乘數(50) × 0.002%」，不是平倉的 0.1%）。要看結算價落在哪個履約價區間才知道哪幾腳價內，這裡不強行試算，請自行依結算價概估`;
+  }
+
+  const netCreditAfterCost = rawNetCredit - totalCost;
+  const putWidth = (putSellStrike - putBuyStrike)*PT*lots;
+  const callWidth = (callBuyStrike - callSellStrike)*PT*lots;
+
+  const maxProfit = netCreditAfterCost;
+  const maxLoss = Math.max(putWidth, callWidth) - netCreditAfterCost;
+  const bepLower = putSellStrike - netCreditAfterCost/(PT*lots);
+  const bepUpper = callSellStrike + netCreditAfterCost/(PT*lots);
+
+  document.getElementById('o_netdebit').textContent = (netCreditAfterCost>=0 ? '淨收入 ' : '淨支出 ') + fmt0(Math.abs(netCreditAfterCost)) + ' 元';
+  document.getElementById('o_netdebit').className = 'v ' + (netCreditAfterCost>=0 ? 'pos' : 'neg');
+  document.getElementById('o_netdebit_stat').classList.add('wide-sm');
+  document.getElementById('o_bep').textContent = `${fmt(bepLower)} ／ ${fmt(bepUpper)} 點`;
+  document.getElementById('o_bep_stat').classList.add('wide');
+  document.getElementById('o_maxprofit').textContent = fmt0(Math.max(maxProfit,0))+' 元';
+  document.getElementById('o_maxprofit').className = 'v pos';
+  document.getElementById('o_maxloss').textContent = fmt0(Math.max(maxLoss,0))+' 元';
+  document.getElementById('o_maxloss').className = 'v neg';
+  document.getElementById('o_costnote').innerHTML = costNote;
+
+  // gauge：雙損平點，跟跨式/勒式共用同一組 marker
+  const gaugeWidth = Math.abs(bepUpper-bepLower);
+  const lo = Math.min(putBuyStrike, bepLower) - gaugeWidth*0.4 - 50;
+  const hi = Math.max(callBuyStrike, bepUpper) + gaugeWidth*0.4 + 50;
+  const span = hi-lo;
+  document.getElementById('o_marker2').style.display = '';
+  const pctLo = ((bepLower-lo)/span)*100;
+  const pctHi = ((bepUpper-lo)/span)*100;
+  document.getElementById('o_marker').style.left = Math.min(96,Math.max(4,pctLo))+'%';
+  document.getElementById('o_marker').setAttribute('data-label', '損平 '+fmt(bepLower));
+  document.getElementById('o_marker2').style.left = Math.min(96,Math.max(4,pctHi))+'%';
+  document.getElementById('o_marker2').setAttribute('data-label', '損平 '+fmt(bepUpper));
+
+  const stratName = strategy==='ironcondor' ? 'Iron Condor（鐵禿鷹）' : 'Iron Butterfly（鐵蝴蝶）';
+  const shapeText = `結算價在 ${fmt(bepLower)} ～ ${fmt(bepUpper)} 點之間時鎖定最大獲利（收取的淨權利金）${fmt0(Math.max(maxProfit,0))} 元；只要結算價跌破 ${fmt(bepLower)} 點或漲破 ${fmt(bepUpper)} 點就開始虧損，跌破 ${fmt(putBuyStrike)} 點或漲破 ${fmt(callBuyStrike)} 點時鎖定最大虧損 ${fmt0(Math.max(maxLoss,0))} 元（風險有限，適合預期盤整的行情）。`;
+  document.getElementById('o_shape').innerHTML = `<b>${stratName}</b>：損益兩平點在 <b>${fmt(bepLower)} ／ ${fmt(bepUpper)}</b> 點。` + shapeText;
+
+  // ---------- 保證金區塊 ----------
+  document.getElementById('o_margin_vspread_note').style.display = 'none';
+  document.getElementById('o_margin_combo_long_note').style.display = 'none';
+  document.getElementById('o_margin_combo_short_note').style.display = 'none';
+  document.getElementById('o_margin_c_updated').style.display = 'none';
+  document.getElementById('o_margin_iron_note').style.display = '';
+
+  const putSpreadMargin = Math.abs(putSellStrike - putBuyStrike)*PT*lots;
+  const callSpreadMargin = Math.abs(callBuyStrike - callSellStrike)*PT*lots;
+  const totalMargin = putSpreadMargin + callSpreadMargin;
+  document.getElementById('o_ic_put_margin').textContent = fmt0(putSpreadMargin)+' 元';
+  document.getElementById('o_ic_call_margin').textContent = fmt0(callSpreadMargin)+' 元';
+  document.getElementById('o_ic_total_margin').textContent = fmt0(totalMargin)+' 元';
 }
 
 function calcOptSingle(){
@@ -1222,6 +1416,19 @@ oBuyStrikeEl.addEventListener('input', ()=>{
 });
 oSellStrikeEl.addEventListener('input', ()=>{
   if(isStraddleSelected()){ oBuyStrikeEl.value = oSellStrikeEl.value; persistInput(oBuyStrikeEl); }
+});
+
+// ---------- 鐵蝴蝶（Iron Butterfly）兩個賣出履約價本來就該一樣，打一個自動同步另一個 ----------
+function isIronButterflySelected(){
+  return document.querySelector('#o_strategy .on')?.dataset.v === 'ironbutterfly';
+}
+const oIcPutSellEl = document.getElementById('o_ic_putsell_strike');
+const oIcCallSellEl = document.getElementById('o_ic_callsell_strike');
+oIcPutSellEl.addEventListener('input', ()=>{
+  if(isIronButterflySelected()){ oIcCallSellEl.value = oIcPutSellEl.value; persistInput(oIcCallSellEl); }
+});
+oIcCallSellEl.addEventListener('input', ()=>{
+  if(isIronButterflySelected()){ oIcPutSellEl.value = oIcCallSellEl.value; persistInput(oIcPutSellEl); }
 });
 
 // ---------- 每個輸入框記住最近 5 筆歷史值，點一下快速帶入 ----------
