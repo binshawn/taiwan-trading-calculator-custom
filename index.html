@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>當沖／期貨／選擇權 損益試算機（手續費自訂版）</title>
+<title>當沖／期貨／選擇權 損益計算機（手續費自訂版）</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/favicon-32.png" type="image/png">
 <meta name="theme-color" content="#d1382a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="損益試算機（自訂）">
+<meta name="apple-mobile-web-app-title" content="損益計算機（自訂）">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -161,7 +161,7 @@
 <div class="wrap">
 
   <div class="board-head">
-    <h1><span class="dot"></span>損益試算機<span class="badge">手續費自訂版</span></h1>
+    <h1><span class="dot"></span>損益計算機<span class="badge">手續費自訂版</span></h1>
     <div class="sub" id="clock">TAIEX · 台股當沖 / 台指期貨 / 台指選擇權</div>
   </div>
 
@@ -594,6 +594,13 @@ document.querySelectorAll('.seg').forEach(seg=>{
       document.getElementById('o_margin_card').style.display = isSingle ? 'none' : '';
       document.getElementById('o_margin_single_card').style.display = isSingle ? '' : 'none';
     }
+    if(seg.id === 'o_strategy' && STRADDLE_STRATS.includes(btn.dataset.v)){
+      // 跨式兩腳履約價本來就該一樣，切過來時先幫忙同步一次，避免殘留勒式時填的不同履約價
+      const buyStrikeEl = document.getElementById('o_buy_strike');
+      const sellStrikeEl = document.getElementById('o_sell_strike');
+      sellStrikeEl.value = buyStrikeEl.value;
+      persistInput(sellStrikeEl);
+    }
     recalcAll();
   });
 });
@@ -840,6 +847,7 @@ function calcOpt(){
 }
 
 const COMBO_STRATS = ['longstraddle','shortstraddle','longstrangle','shortstrangle'];
+const STRADDLE_STRATS = ['longstraddle','shortstraddle'];
 function otmSurcharge(otmPoints){
   if(otmPoints >= 1000) return 1.5;
   if(otmPoints >= 500) return 1.2;
@@ -1201,6 +1209,20 @@ document.querySelectorAll('input').forEach(el=>{
   el.addEventListener('input', ()=>{ persistInput(el); debouncedRecalc(); });
 });
 recalcAll();
+
+// ---------- 跨式（Straddle）兩腳履約價本來就該一樣，打一個自動同步另一個 ----------
+function isStraddleSelected(){
+  const strategy = document.querySelector('#o_strategy .on')?.dataset.v;
+  return STRADDLE_STRATS.includes(strategy);
+}
+const oBuyStrikeEl = document.getElementById('o_buy_strike');
+const oSellStrikeEl = document.getElementById('o_sell_strike');
+oBuyStrikeEl.addEventListener('input', ()=>{
+  if(isStraddleSelected()){ oSellStrikeEl.value = oBuyStrikeEl.value; persistInput(oSellStrikeEl); }
+});
+oSellStrikeEl.addEventListener('input', ()=>{
+  if(isStraddleSelected()){ oBuyStrikeEl.value = oSellStrikeEl.value; persistInput(oBuyStrikeEl); }
+});
 
 // ---------- 每個輸入框記住最近 5 筆歷史值，點一下快速帶入 ----------
 const HIST_KEY = 'inputHistory';
